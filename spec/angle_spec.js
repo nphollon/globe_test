@@ -1,5 +1,3 @@
-// TODO: toDegreesMinutesSeconds() should work properly for negative angles
-// TODO: negative() should work properly for negative angles
 // TODO: inline angle1
 // TODO: factory method can take fractional degrees if minutes and seconds are undefined
 // TODO: fractional minutes if degrees are 0 and seconds are undefined
@@ -54,8 +52,9 @@ describe("Angle", function () {
         });
 
         it("should negate the most significant component if necessary", function () {
-            dms = angle(-1, 0, 0).toDegreesMinutesSeconds();
+            dms = angle(-1, 0, 1).toDegreesMinutesSeconds();
             expect(dms.degrees).toEqual(-1);
+            expect(dms.seconds).toEqual(1);
         });
     });
 
@@ -108,6 +107,17 @@ describe("Angle", function () {
 
             var negSeconds = angle(0, 0, 1).negative();
             expect(angle(0, 0, -1)).toEqualAngle(negSeconds);
+        });
+
+        it("should return a positive angle if original angle negative", function () {
+            var negDegrees = angle(-1, 1, 1).negative();
+            expect(angle(1, 1, 1)).toEqualAngle(negDegrees);
+
+            var negMinutes = angle(0, -1, 1).negative();
+            expect(angle(0, 1, 1)).toEqualAngle(negMinutes);
+
+            var negSeconds = angle(0, 0, -1).negative();
+            expect(angle(0, 0, 1)).toEqualAngle(negSeconds);
         });
     });
 

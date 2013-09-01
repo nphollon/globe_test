@@ -22,9 +22,26 @@ var angle = function (degrees, minutes, seconds) {
     absMinutes = Math.abs(minutes) || 0;
     absSeconds = Math.abs(seconds) || 0;
 
-    signedDegrees = sign * absDegrees;
-    signedMinutes = (absDegrees === 0) ? sign * absMinutes : absMinutes;
-    signedSeconds = (absMinutes === 0) ? sign * absSeconds : absSeconds;
+    signedDegrees = function (appliedSign) {
+        appliedSign = appliedSign || 1;
+        return appliedSign * sign * absDegrees;
+    }
+
+    signedMinutes = function (appliedSign) {
+        appliedSign = appliedSign || 1;
+        if (absDegrees === 0) {
+            return appliedSign * sign * absMinutes;
+        }
+        return absMinutes;
+    }
+
+    signedSeconds = function(appliedSign) {
+        appliedSign = appliedSign || 1;
+        if (absDegrees === 0 && absMinutes === 0) {
+            return appliedSign * sign * absSeconds;
+        }
+        return absSeconds;
+    }
 
     isAnAngle = function (object) {
         return object !== undefined &&
@@ -35,14 +52,17 @@ var angle = function (degrees, minutes, seconds) {
     isEqualMagnitude = function (otherAngle) {
         var otherDMS = otherAngle.toDegreesMinutesSeconds();
         return typeof otherDMS === 'object' &&
-            signedDegrees === otherDMS.degrees &&
-            signedMinutes === otherDMS.minutes &&
-            signedSeconds === otherDMS.seconds;
+            signedDegrees() === otherDMS.degrees &&
+            signedMinutes() === otherDMS.minutes &&
+            signedSeconds() === otherDMS.seconds;
     };
 
 
     that.toDegreesMinutesSeconds = function () {
-        return { degrees: signedDegrees, minutes: signedMinutes, seconds: signedSeconds };
+        return { degrees: signedDegrees(),
+                 minutes: signedMinutes(),
+                 seconds: signedSeconds()
+               };
     };
 
     that.toDecimalDegrees = function () {
@@ -51,9 +71,7 @@ var angle = function (degrees, minutes, seconds) {
     };
 
     that.negative = function () {
-        if (absDegrees !== 0) return angle(-absDegrees, absMinutes, absSeconds);
-        if (absMinutes !== 0) return angle(0, -absMinutes, absSeconds);
-        return angle(0, 0, -absSeconds);
+        return angle(signedDegrees(-1), signedMinutes(-1), signedSeconds(-1));
     };
 
     that.equals = function (object) {
