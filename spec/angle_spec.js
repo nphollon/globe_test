@@ -1,15 +1,10 @@
-// TODO: inline angle1
 // TODO: factory method can take fractional degrees if minutes and seconds are undefined
 // TODO: fractional minutes if degrees are 0 and seconds are undefined
 // TODO: fractional seconds if degrees and minutes are 0
 // TODO: what if minutes > 60 and seconds > 60? convert or fail?
 
 describe("Angle", function () {
-    var angle1;
-
     beforeEach(function () {
-        angle1 = angle(1, 2, 3);
-
         this.addMatchers({
 
             toEqualAngle: function (expected) {
@@ -41,44 +36,51 @@ describe("Angle", function () {
 
     describe("toDegreesMinutesSeconds()", function () {
         it("should be immutable", function () {
-            angle1.toDegreesMinutesSeconds().degrees = 10;
-            expect(angle1.toDegreesMinutesSeconds().degrees).toEqual(1);
+            var fixedAngle = angle(1, 2, 3);
+            fixedAngle.toDegreesMinutesSeconds().degrees = 10;
+            expect(fixedAngle.toDegreesMinutesSeconds().degrees).toEqual(1);
         });
 
         it("should return 0 for undefined minutes and seconds", function () {
-            angle1 = angle(1);
-            expect(angle1.toDegreesMinutesSeconds().minutes).toEqual(0);
-            expect(angle1.toDegreesMinutesSeconds().seconds).toEqual(0);
+            var dmsForm = angle(1).toDegreesMinutesSeconds();
+            expect(dmsForm.minutes).toEqual(0);
+            expect(dmsForm.seconds).toEqual(0);
         });
 
         it("should negate the most significant component if necessary", function () {
-            dms = angle(-1, 0, 1).toDegreesMinutesSeconds();
-            expect(dms.degrees).toEqual(-1);
-            expect(dms.seconds).toEqual(1);
+            var dmsForm = angle(-1, 0, 1).toDegreesMinutesSeconds();
+            expect(dmsForm.degrees).toEqual(-1);
+            expect(dmsForm.seconds).toEqual(1);
         });
     });
 
     describe("equals()", function () {
+        var testAngle;
+
+        beforeEach(function () {
+            testAngle = angle(1, 2, 3);
+        });
+
         it("should compare degrees, minutes, and seconds of two angles", function () {
-            expect(angle1).toEqualAngle(angle(1, 2, 3));
-            expect(angle1).not.toEqualAngle(angle(0, 2, 3));
-            expect(angle1).not.toEqualAngle(angle(1, 1, 3));
-            expect(angle1).not.toEqualAngle(angle(1, 2, 2));
+            expect(testAngle).toEqualAngle(angle(1, 2, 3));
+            expect(testAngle).not.toEqualAngle(angle(0, 2, 3));
+            expect(testAngle).not.toEqualAngle(angle(1, 1, 3));
+            expect(testAngle).not.toEqualAngle(angle(1, 2, 2));
         });
 
         it("should not be equal to undefined", function () {
-            expect(angle1).not.toEqualAngle(undefined);
+            expect(testAngle).not.toEqualAngle(undefined);
         });
 
         it("should not be equal to non-Angle objects", function () {
             emptyObject = {};
             emptyDmsObject = { toDegreesMinutesSeconds: function () {} };
-            expect(angle1).not.toEqualAngle(emptyObject);
-            expect(angle1).not.toEqualAngle(emptyDmsObject);
+            expect(testAngle).not.toEqualAngle(emptyObject);
+            expect(testAngle).not.toEqualAngle(emptyDmsObject);
         });
 
         it("should not be equal to null", function () {
-            expect(angle1).not.toEqualAngle(null);
+            expect(testAngle).not.toEqualAngle(null);
         });
     });
 
@@ -123,8 +125,9 @@ describe("Angle", function () {
 
     describe("toString()", function () {
         it("should string of toDegreesMinutesSeconds()", function () {
+            var testAngle = angle(1, 2, 3);
             var expectedString = '{ degrees: 1, minutes: 2, seconds: 3 }';
-            expect(angle1.toString()).toEqual(expectedString);
+            expect(testAngle.toString()).toEqual(expectedString);
         });
     });
 });
