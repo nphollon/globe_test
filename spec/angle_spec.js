@@ -1,5 +1,3 @@
-// TODO: what if minutes > 60 and seconds > 60? convert or fail?
-
 describe("Angle", function () {
     beforeEach(function () {
         this.addMatchers({
@@ -15,31 +13,52 @@ describe("Angle", function () {
 
                 return actual.equals(expected);
             }
-
         });
     });
 
-    describe("exceptional arguments", function() {
-        var error;
+    describe("exceptional arguments", function () {
+        var getErrorTester = function (message) {
+            var error = {
+                name: 'ArgumentError',
+                message: message
+            };
 
-        beforeEach(function () {
-            error = { name: 'ArgumentError' };
-        });
+            return function (degrees, minutes, seconds) {
+                expect(function () { angle(degrees, minutes, seconds); }).toThrow(error);
+            };
+        };
 
         it("should error if lesser component is negative", function () {
-            error['message'] = 'only the most significant component of an angle ' +
-                'may be negative';
-            expect(function () { angle(1, -1, 0); }).toThrow(error);
-            expect(function () { angle(1, 0, -1); }).toThrow(error);
-            expect(function () { angle(0, 1, -1); }).toThrow(error);
+            var verifyArgumentsThrowError = getErrorTester(
+                'only the most significant component of an angle may be negative'
+            );
+            verifyArgumentsThrowError(1, -1, 0);
+            verifyArgumentsThrowError(1, 0, -1);
+            verifyArgumentsThrowError(0, 1, -1);
         });
 
-        it("should error if mixing non-integer and integer arguments", function () {
-            error['message'] = 'angle() received unexpected non-integer arguments';
-            expect(function () { angle(1.1, 0); }).toThrow(error);
-            expect(function () { angle(1.1, undefined, 0); }).toThrow(error);
-            expect(function () { angle(0, 1.1); }).toThrow(error);
-            expect(function () { angle(0, 0, 1.1); }).toThrow(error);
+        it("should error if minutes or seconds are not less than sixty", function () {
+            var verifyArgumentsThrowError = getErrorTester(
+                'minutes and seconds must be less than 60'
+            );
+            verifyArgumentsThrowError(0, 60);
+            verifyArgumentsThrowError(0, 0, 60);
+        });
+
+        it("should error if minutes/seconds are fractional", function () {
+            var verifyArgumentsThrowError = getErrorTester(
+                'minutes and seconds must be integers'
+            );
+            verifyArgumentsThrowError(0, 1.1);
+            verifyArgumentsThrowError(0, 0, 1.1);
+        });
+
+        it("should error if minutes/seconds included with decimal degrees", function () {
+            var verifyArgumentsThrowError = getErrorTester(
+                'minutes and seconds cannot be passed with non-integer degrees'
+            );
+            verifyArgumentsThrowError(1.1, 0);
+            verifyArgumentsThrowError(1.1, undefined, 0);
         });
     });
 

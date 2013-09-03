@@ -6,11 +6,11 @@ var angle = function (degrees, minutes, seconds) {
 
     // Private functions
     var initialize, signedDegrees, signedMinutes, signedSeconds;
-    var validateArguments, allFulfill, isNonNegative, isInteger, isUndefined;
-    var fromDegreesMinutesSeconds, fromDecimalDegrees;
+    var errorConditions, allFulfill, isNonNegative, isInteger, isUndefined;
+    var fromDegreesMinutesSeconds, fromDecimalDegrees, getSign, fractionalPart;
 
     initialize = function () {
-        validateArguments();
+        errorConditions().validate();
 
         if (isInteger(degrees)) {
             fromDegreesMinutesSeconds();
@@ -85,49 +85,57 @@ var angle = function (degrees, minutes, seconds) {
         return absSeconds;
     };
 
-    validateArguments = function () {
-        var hasValidSigns, minutesSecondsCondition;
+    errorConditions = function () {
+        var validator = argumentValidator();
 
-        var throwArgumentError = function (message) {
-            throw {
-                name: 'ArgumentError',
-                message: message
-            };
-        };
+        validator.addError('invalid signs',
+                           'only the most significant component of an angle may be negative',
+                           function () {
+                               if (degrees !== 0) {
+                                   return minutes < 0 || seconds < 0;
+                               } else if (minutes !== 0) {
+                                   return seconds < 0;
+                               } else {
+                                   return false;
+                               }
+                           });
 
-        if (degrees !== 0) {
-            hasValidSigns = allFulfill(isNonNegative, minutes, seconds);
-        } else if (minutes !== 0) {
-            hasValidSigns = isNonNegative(seconds);
-        } else {
-            hasValidSigns = true;
-        }
-        
-        if (!hasValidSigns) {
-            throwArgumentError('only the most significant component ' +
-                               'of an angle may be negative');
-        }
+        validator.addError('invalid fractions',
+                           'minutes and seconds must be integers',
+                           function () {
+                               if (isInteger(degrees)) {
+                                   return !isInteger(minutes) || !isInteger(seconds);
+                               } else {
+                                   return false;
+                               }
+                           });
 
-        var minutesSecondsCondition = isInteger(degrees) ? isInteger : isUndefined;
-        
-        if (!allFulfill(minutesSecondsCondition, minutes, seconds)) {
-            throwArgumentError('angle() received unexpected non-integer arguments');
-        }
-    }
+        validator.addError('too many arguments',
+                           'minutes and seconds cannot be passed with non-integer degrees',
+                           function () {
+                               if (isInteger(degrees)) {
+                                   return false;
+                               } else {
+                                   return !isUndefined(minutes) || !isUndefined(seconds);
+                               }
+                           });
 
-    allFulfill = function (condition) {
-        for (var i = 1; i < arguments.length; i++) {
-            if (!condition.call(null, arguments[i])) return false;
-        }
-        return true;
+        validator.addError('minutes/seconds overflow',
+                           'minutes and seconds must be less than 60',
+                           function () {
+                               return minutes >= 60 || seconds >= 60;
+                           });
+
+        return validator;
     };
+
+
+    getSign = function () {
+        return (degrees < 0 || minutes < 0 || seconds < 0) ? -1 : 1;
+    }
 
     isInteger = function (number) {
         return number === parseInt(number) || isUndefined(number);
-    };
-
-    isNonNegative = function (number) {
-        return number >= 0 || isUndefined(number);
     };
 
     isUndefined = function (number) {
@@ -135,22 +143,27 @@ var angle = function (degrees, minutes, seconds) {
     };
 
     fromDegreesMinutesSeconds = function () {
-        sign = allFulfill(isNonNegative, degrees, minutes, seconds) ? 1 : -1;
+        sign = getSign();
         absDegrees = Math.abs(degrees);
         absMinutes = Math.abs(minutes) || 0;
         absSeconds = Math.abs(seconds) || 0;
     };
 
     fromDecimalDegrees = function () {
-        sign = allFulfill(isNonNegative, degrees, minutes, seconds) ? 1 : -1;
+        sign = getSign();
         absDegrees = Math.abs(degrees);
-        absMinutes = (absDegrees - parseInt(absDegrees)) * 60;
-        absSeconds = (absMinutes - parseInt(absMinutes)) * 60;
+        absMinutes = fractionalPart(absDegrees) * 60;
+        absSeconds = fractionalPart(absMinutes) * 60;
 
         absDegrees = parseInt(absDegrees);
         absMinutes = parseInt(absMinutes);
         absSeconds = Math.round(absSeconds);
     };
+
+    fractionalPart = function (number) {
+        return number - parseInt(number);
+    };
+
 
     initialize();
     return that;
