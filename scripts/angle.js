@@ -9,6 +9,9 @@ var angle = function (degrees, minutes, seconds) {
     var errorConditions, allFulfill, isNonNegative, isInteger, isUndefined;
     var fromDegreesMinutesSeconds, fromDecimalDegrees, getSign, fractionalPart;
 
+    var minutesPerDegree = 60;
+    var secondsPerMinute = 60;
+
     initialize = function () {
         errorConditions().validate();
 
@@ -21,14 +24,16 @@ var angle = function (degrees, minutes, seconds) {
 
 
     that.toDegreesMinutesSeconds = function () {
-        return { degrees: signedDegrees(),
-                 minutes: signedMinutes(),
-                 seconds: signedSeconds()
-               };
+        return { 
+            degrees: signedDegrees(),
+            minutes: signedMinutes(),
+            seconds: signedSeconds()
+        };
     };
 
     that.toDecimalDegrees = function () {
-        var absDecimalDegrees = absDegrees + absMinutes/60 + absSeconds/3600;
+        var absDecimalDegrees = absDegrees +
+            absMinutes/minutesPerDegree + absSeconds/secondsPerMinute/minutesPerDegree;
         return sign * absDecimalDegrees;
     };
 
@@ -123,7 +128,7 @@ var angle = function (degrees, minutes, seconds) {
         validator.addError('minutes/seconds overflow',
                            'minutes and seconds must be less than 60',
                            function () {
-                               return minutes >= 60 || seconds >= 60;
+                               return minutes >= minutesPerDegree || seconds >= secondsPerMinute;
                            });
 
         return validator;
@@ -152,8 +157,8 @@ var angle = function (degrees, minutes, seconds) {
     fromDecimalDegrees = function () {
         sign = getSign();
         absDegrees = Math.abs(degrees);
-        absMinutes = fractionalPart(absDegrees) * 60;
-        absSeconds = fractionalPart(absMinutes) * 60;
+        absMinutes = fractionalPart(absDegrees) * minutesPerDegree;
+        absSeconds = fractionalPart(absMinutes) * secondsPerMinute;
 
         absDegrees = parseInt(absDegrees);
         absMinutes = parseInt(absMinutes);
