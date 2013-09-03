@@ -1,6 +1,3 @@
-// TODO: factory method can take fractional degrees if minutes and seconds are undefined
-// TODO: fractional minutes if degrees are 0 and seconds are undefined
-// TODO: fractional seconds if degrees and minutes are 0
 // TODO: what if minutes > 60 and seconds > 60? convert or fail?
 
 describe("Angle", function () {
@@ -12,7 +9,8 @@ describe("Angle", function () {
                 var notText = this.isNot ? "false" : "true";
 
                 this.message = function () {
-                    return "Expected " + actual + ".equals(" + expected + ") to be " + notText;
+                    return "Expected " + actual + ".equals("
+                        + expected + ") to be " + notText;
                 }
 
                 return actual.equals(expected);
@@ -22,15 +20,26 @@ describe("Angle", function () {
     });
 
     describe("exceptional arguments", function() {
-        it("should throw error if lesser component is negative", function () {
-            var negationError = { name: 'ArgumentError',
-                                  message: 'only the most significant component ' +
-                                  'of an angle may be negative'
-                                };
+        var error;
 
-            expect(function () { angle(1, -1, 0); }).toThrow(negationError);
-            expect(function () { angle(1, 0, -1); }).toThrow(negationError);
-            expect(function () { angle(0, 1, -1); }).toThrow(negationError);
+        beforeEach(function () {
+            error = { name: 'ArgumentError' };
+        });
+
+        it("should error if lesser component is negative", function () {
+            error['message'] = 'only the most significant component of an angle ' +
+                'may be negative';
+            expect(function () { angle(1, -1, 0); }).toThrow(error);
+            expect(function () { angle(1, 0, -1); }).toThrow(error);
+            expect(function () { angle(0, 1, -1); }).toThrow(error);
+        });
+
+        it("should error if mixing non-integer and integer arguments", function () {
+            error['message'] = 'angle() received unexpected non-integer arguments';
+            expect(function () { angle(1.1, 0); }).toThrow(error);
+            expect(function () { angle(1.1, undefined, 0); }).toThrow(error);
+            expect(function () { angle(0, 1.1); }).toThrow(error);
+            expect(function () { angle(0, 0, 1.1); }).toThrow(error);
         });
     });
 
@@ -51,6 +60,17 @@ describe("Angle", function () {
             var dmsForm = angle(-1, 0, 1).toDegreesMinutesSeconds();
             expect(dmsForm.degrees).toEqual(-1);
             expect(dmsForm.seconds).toEqual(1);
+        });
+
+        it("should convert decimal degree argument to minutes and seconds", function () {
+            var dmsForm = angle(1.5).toDegreesMinutesSeconds();
+            expect(dmsForm.degrees).toEqual(1);
+            expect(dmsForm.minutes).toEqual(30);
+        });
+
+        it("should round seconds seconds", function() {
+            var dmsForm = angle(1e-3).toDegreesMinutesSeconds();
+            expect(dmsForm.seconds).toEqual(4);
         });
     });
 
