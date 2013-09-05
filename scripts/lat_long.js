@@ -1,5 +1,6 @@
 var latitude = function (degrees, minutes, seconds) {
     var that =  angle(degrees, minutes, seconds);
+
     if (Math.abs(that.toDecimalDegrees()) > 90) {
         throw {
             name: 'ArgumentError',
@@ -12,6 +13,7 @@ var latitude = function (degrees, minutes, seconds) {
 
 var longitude = function (degrees, minutes, seconds) {
     var that = angle(degrees, minutes, seconds);
+
     if (Math.abs(that.toDecimalDegrees()) > 180) {
         throw {
             name: 'ArgumentError',
@@ -20,4 +22,11 @@ var longitude = function (degrees, minutes, seconds) {
     }
 
     return that;
-}
+};
+
+var coordinates = function (lat, lon) {
+    return {
+        latitude: latitude(lat),
+        longitude: longitude(lon)
+    };
+};

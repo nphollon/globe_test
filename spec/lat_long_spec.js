@@ -27,3 +27,11 @@ describe("Longitude", function () {
         expect(function () { longitude(-180, 0, 1); }).toThrow(error);
     });
 });
+
+describe("Coordinates", function() {
+    it("should have a latitude and longitude", function () {
+        var coord = coordinates(1.5, 2.7);
+        expect(angle(1.5).equals(coord.latitude)).toBeTruthy();
+        expect(angle(2.7).equals(coord.longitude)).toBeTruthy();
+    });
+});
