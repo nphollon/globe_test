@@ -1,13 +1,23 @@
 "use strict";
 
-function draw() {
-    var canvas = document.getElementById('canvas');
+var createRenderer = function (context) {
+    var that = {};
 
-    if (!canvas.getContext) { return; }
+    that.drawMarker = function (point) {
+        context.fillRect(point.x() - 5, point.y() - 5, 10, 10);
+    };
 
-    var ctx = canvas.getContext('2d');
-    ctx.fillStyle = "rgb(200,0,0)";
-    ctx.fillRect (10, 10, 55, 50);
-    ctx.fillStyle = "rgba(0, 0, 200, 0.5)";
-    ctx.fillRect (30, 30, 55, 50);
-}
+    that.drawMarkers = function (points) {
+        points.map(this.drawMarker, this);
+    };
+
+    return that;
+};
+
+var draw = function (canvas) {
+    var renderer = createRenderer(canvas.getContext('2d'));
+    var proj = projection(canvas.width, canvas.height);
+    var coords = healpix.basePixelVertices();
+    var points = coords.map(proj);
+    renderer.drawMarkers(points);
+};

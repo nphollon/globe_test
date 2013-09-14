@@ -1,13 +1,18 @@
 <html>
 <head>
   <title>Globe Test</title>
+  <script type="text/javascript" src="scripts/argumentValidator.js"></script>
+  <script type="text/javascript" src="scripts/angle.js"></script>
+  <script type="text/javascript" src="scripts/lat_long.js"></script>
   <script type="text/javascript" src="scripts/draw.js"></script>
+  <script type="text/javascript" src="scripts/projection.js"></script>
+  <script type="text/javascript" src="scripts/healpix.js"></script>
   <style type="text/css">
     canvas { border: 1px solid black; }
   </style>
 </head>
-<body onload="draw();">
-  <canvas id="canvas" height="200" width="200">
+<body onload="draw(document.getElementById('canvas'));">
+  <canvas id="canvas" height="200" width="300">
     Sorry. Your browser does not support graphics canvas.
   </canvas>
 </body>
