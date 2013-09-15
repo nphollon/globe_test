@@ -386,6 +386,14 @@ cartographer = (function () {
             return "(" + x + ", " + y + ")";
         };
 
+        that.equals = function (object) {
+            return object !== undefined &&
+                object !== null &&
+                typeof object.x === 'function' &&
+                typeof object.y === 'function' &&
+                x === object.x() && y === object.y();
+        };
+
         return that;
     };
 
