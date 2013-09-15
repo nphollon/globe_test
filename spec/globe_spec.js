@@ -1,15 +1,14 @@
 /*global jasmine, describe, beforeEach, it, expect,
-  maps, createRenderer, point2d */
+  maps, cartographer */
 
 describe("Maps", function () {
     "use strict";
 
-    var angle, latitude, longitude, coordinates, projection, healpix;
+    var angle, latitude, longitude, coordinates, healpix;
     angle = maps.angle;
     latitude = maps.latitude;
     longitude = maps.longitude;
     coordinates = maps.coordinates;
-    projection = maps.projection;
     healpix = maps.healpix;
 
     describe("Angle", function () {
@@ -260,6 +259,47 @@ describe("Maps", function () {
         });
     });
 
+    describe("Healpix", function () {
+        describe("basePixelVertices()", function () {
+            it("should return list of 12 points", function () {
+                var expectedCoords, actualCoords, i;
+
+                expectedCoords = [
+                    coordinates(90, 0),
+                    coordinates(45, -135),
+                    coordinates(45, -45),
+                    coordinates(45, 45),
+                    coordinates(45, 135),
+                    coordinates(0, -90),
+                    coordinates(0, 0),
+                    coordinates(0, 90),
+                    coordinates(0, 180),
+                    coordinates(-45, -135),
+                    coordinates(-45, -45),
+                    coordinates(-45, 45),
+                    coordinates(-45, 135),
+                    coordinates(-90, 0)
+                ];
+
+                actualCoords = healpix.basePixelVertices();
+
+                for (i = 0; i < expectedCoords.length; i += 1) {
+                    expect(expectedCoords[i].equals(actualCoords[i])).toBeTruthy();
+                }
+            });
+        });
+    });
+});
+
+describe("Cartographer", function () {
+    "use strict";
+
+    var createRenderer, point2d, projection;
+
+    createRenderer = cartographer.createRenderer;
+    point2d = cartographer.point2d;
+    projection = cartographer.projection;
+
     describe("Renderer", function () {
         var context, renderer, pt;
 
@@ -288,7 +328,7 @@ describe("Maps", function () {
         var plateCaree, verifyProjection;
 
         verifyProjection = function (mapXY, canvasXY) {
-            var canvasCoords = plateCaree(coordinates(mapXY[0], mapXY[1]));
+            var canvasCoords = plateCaree(maps.coordinates(mapXY[0], mapXY[1]));
             expect(canvasCoords.x()).toEqual(canvasXY[0]);
             expect(canvasCoords.y()).toEqual(canvasXY[1]);
         };
@@ -322,37 +362,6 @@ describe("Maps", function () {
 
             it("should translate coords (0, 2) to 1px right of the canvas center", function () {
                 verifyProjection([0, 2], [91, 45]);
-            });
-        });
-    });
-
-    describe("Healpix", function () {
-        describe("basePixelVertices()", function () {
-            it("should return list of 12 points", function () {
-                var expectedCoords, actualCoords, i;
-
-                expectedCoords = [
-                    coordinates(90, 0),
-                    coordinates(45, -135),
-                    coordinates(45, -45),
-                    coordinates(45, 45),
-                    coordinates(45, 135),
-                    coordinates(0, -90),
-                    coordinates(0, 0),
-                    coordinates(0, 90),
-                    coordinates(0, 180),
-                    coordinates(-45, -135),
-                    coordinates(-45, -45),
-                    coordinates(-45, 45),
-                    coordinates(-45, 135),
-                    coordinates(-90, 0)
-                ];
-
-                actualCoords = healpix.basePixelVertices();
-
-                for (i = 0; i < expectedCoords.length; i += 1) {
-                    expect(expectedCoords[i].equals(actualCoords[i])).toBeTruthy();
-                }
             });
         });
     });
