@@ -324,6 +324,14 @@ describe("Cartographer", function () {
         });
     });
 
+    describe("Point2d", function () {
+        describe("toString()", function () {
+            it("should concatenate x and y", function () {
+                expect(point2d(1, 2).toString()).toEqual("(1, 2)");
+            });
+        });
+    });
+
     describe("Equirectangular projection", function () {
         var plateCaree, verifyProjection;
 

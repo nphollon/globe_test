@@ -374,8 +374,14 @@ cartographer = (function () {
 
     point2d = function (x, y) {
         var that = {};
+
         that.x = function () { return x; };
         that.y = function () { return y; };
+
+        that.toString = function () {
+            return "(" + x + ", " + y + ")";
+        }
+
         return that;
     };
 
