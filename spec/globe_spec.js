@@ -325,9 +325,25 @@ describe("Cartographer", function () {
     });
 
     describe("Point2d", function () {
+        var testPoint;
+        
+        beforeEach(function () {
+            testPoint = point2d(1, 2);
+        });
+
+        describe("plus()", function () {
+            it("should return point2d with sum of coordinates", function () {
+                var displacement, newPoint;
+                displacement = point2d(4, 7);
+                newPoint = testPoint.plus(displacement);
+                expect(newPoint.x()).toEqual(5);
+                expect(newPoint.y()).toEqual(9);
+            });
+        });
+
         describe("toString()", function () {
             it("should concatenate x and y", function () {
-                expect(point2d(1, 2).toString()).toEqual("(1, 2)");
+                expect(testPoint.toString()).toEqual("(1, 2)");
             });
         });
     });

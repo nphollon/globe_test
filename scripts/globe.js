@@ -378,21 +378,31 @@ cartographer = (function () {
         that.x = function () { return x; };
         that.y = function () { return y; };
 
+        that.plus = function (addend) {
+            return point2d(x + addend.x(), y + addend.y());
+        };
+
         that.toString = function () {
             return "(" + x + ", " + y + ")";
-        }
+        };
 
         return that;
     };
 
     projection = function (canvasWidth, canvasHeight) {
         return function (mapCoords) {
-            var x, y;
-            x = canvasWidth / 2 +
-                mapCoords.decLongitude() * canvasWidth / 360;
-            y = canvasHeight / 2 -
-                mapCoords.decLatitude() * canvasHeight / 180;
-            return point2d(x, y);
+            var canvasCenter,
+                displacement,
+                transformX,
+                transformY;
+
+            transformX = mapCoords.decLongitude() * canvasWidth / 360;
+            transformY = -mapCoords.decLatitude() * canvasHeight / 180;
+            displacement = point2d(transformX, transformY);
+
+            canvasCenter = point2d(canvasWidth / 2, canvasHeight / 2);
+
+            return canvasCenter.plus(displacement);
         };
     };
 
