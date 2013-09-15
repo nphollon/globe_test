@@ -1,14 +1,24 @@
-var maps, cartographer;
+var cartographer, // Namespace for drawing- & projection-related functions
+    maps; // Namespace for coordinate-related functions
 
 maps = (function () {
     "use strict";
 
-    var argumentValidator, angle, limitedAngle, latitude, longitude,
-        coordinates, healpix;
+    var angle,
+        argumentValidator,
+        coordinates,
+        healpix,
+        latitude, // returns angle bounded at +/-90 deg
+        limitedAngle, // returns angle bounded by given value
+        longitude; // returns angle bounded at +/- 180 deg
 
 
     argumentValidator = function () {
-        var validations, checkErrorCondition, argumentError, addError, validate;
+        var addError, // adds new error condition to validations list
+            argumentError, // returns error object
+            checkErrorCondition, // throws error if given condition fails
+            validate, // maps checkErrorCondition onto validations
+            validations; // stores error conditions and messages
 
         validations = [];
 
@@ -34,15 +44,25 @@ maps = (function () {
     };
 
     angle = function (degrees, minutes, seconds) {
-        var that, sign, absDegrees, absMinutes, absSeconds, minutesPerDegree, secondsPerMinute,
+        var absDegrees, // absolute value of degrees
+            absMinutes, // absolute value of minutes
+            absSeconds, // absolute value of seconds
+            minutesPerDegree = 60,
+            secondsPerMinute = 60,
+            sign, // sign of angle (+1 or -1)
+            that, // return value; contains public methods
 
-        // Private functions
-            initialize, signedDegrees, signedMinutes, signedSeconds,
-            errorConditions, isInteger, isUndefined,
-            fromDegreesMinutesSeconds, fromDecimalDegrees, getSign;
-
-        minutesPerDegree = 60;
-        secondsPerMinute = 60;
+            // Functions
+            errorConditions, // constructs an argumentValidator
+            fromDegreesMinutesSeconds, // constructor helper
+            fromDecimalDegrees, // constructor helper
+            getSign,
+            initialize, // constructor
+            isInteger,
+            isUndefined,
+            signedDegrees, // applies sign to absDegrees
+            signedMinutes, // applies sign to absMinutes
+            signedSeconds; // applies sign to absSeconds
 
         that = {};
 
@@ -72,11 +92,14 @@ maps = (function () {
         };
 
         that.negative = function () {
-            return angle(signedDegrees(-1), signedMinutes(-1), signedSeconds(-1));
+            return angle(signedDegrees(-1),
+                         signedMinutes(-1),
+                         signedSeconds(-1));
         };
 
         that.equals = function (object) {
-            var isAnAngle, isEqualMagnitude;
+            var isAnAngle, // true if object is comparable to angle
+                isEqualMagnitude; // true if DMS values are equal
 
             isAnAngle = function () {
                 return object !== undefined &&
@@ -125,7 +148,11 @@ maps = (function () {
         };
 
         errorConditions = function () {
-            var validator, signCondition, fractionCondition, argumentNumberCondition, overflowCondition;
+            var argumentNumberCondition, // true if too many arguments passed
+                fractionCondition, // true if multiple non-integer arguments
+                overflowCondition, // true if minutes or seconds > 60
+                signCondition, // true if multiple negative arguments
+                validator; // return value
 
             validator = argumentValidator();
 
@@ -154,16 +181,19 @@ maps = (function () {
             };
 
             overflowCondition = function () {
-                return minutes >= minutesPerDegree || seconds >= secondsPerMinute;
+                return minutes >= minutesPerDegree ||
+                    seconds >= secondsPerMinute;
             };
 
-            validator.addError('only the most significant component of an angle may be negative',
+            validator.addError('only the most significant component ' +
+                               'of an angle may be negative',
                                signCondition);
 
             validator.addError('minutes and seconds must be integers',
                                fractionCondition);
 
-            validator.addError('minutes and seconds cannot be passed with non-integer degrees',
+            validator.addError('minutes and seconds cannot be passed ' +
+                               'with non-integer degrees',
                                argumentNumberCondition);
 
             validator.addError('minutes and seconds must be less than 60',
@@ -234,21 +264,35 @@ maps = (function () {
     longitude = limitedAngle(180, 'longitude');
 
     coordinates = function (latDecimal, lonDecimal) {
-        var that, latAngle, lonAngle, polarLat;
+        var latAngle, // latitude angle object
+            lonAngle, // longitude angle object
+            polarLat = 90, // latitude of pole
+            that; // return value; contains public methods
 
         that = {};
         latAngle = latitude(latDecimal);
         lonAngle = longitude(lonDecimal);
 
-        polarLat = 90;
+        that.latitude = function () {
+            return latAngle;
+        };
 
-        that.latitude = function () { return latAngle; };
-        that.decLatitude = function () { return latAngle.toDecimalDegrees(); };
-        that.longitude = function () { return lonAngle; };
-        that.decLongitude = function () { return lonAngle.toDecimalDegrees(); };
+        that.decLatitude = function () {
+            return latAngle.toDecimalDegrees();
+        };
+
+        that.longitude = function () {
+            return lonAngle;
+        };
+
+        that.decLongitude = function () {
+            return lonAngle.toDecimalDegrees();
+        };
 
         that.equals = function (object) {
-            var isCoordinates, hasEqualComponents, isAtSamePole;
+            var isAtSamePole, // true if latitudes are at north or south pole
+                isCoordinates, // true if object is comparable to coordinates
+                hasEqualComponents; // true if latitudes and longitudes are eq
 
             isCoordinates = function () {
                 return object !== null && object !== undefined &&
@@ -262,8 +306,10 @@ maps = (function () {
             };
 
             isAtSamePole = function () {
-                return (latAngle.equals(angle(polarLat)) && object.latitude().equals(angle(polarLat))) ||
-                    (latAngle.equals(angle(-polarLat)) && object.latitude().equals(angle(-polarLat)));
+                return (latAngle.equals(angle(polarLat)) &&
+                        object.latitude().equals(angle(polarLat))) ||
+                    (latAngle.equals(angle(-polarLat)) &&
+                     object.latitude().equals(angle(-polarLat)));
             };
 
             return isCoordinates() && (isAtSamePole() || hasEqualComponents());
@@ -275,14 +321,21 @@ maps = (function () {
     healpix = {};
 
     healpix.basePixelVertices = function () {
-        var vertices, initLongitudes, i, lon, lat;
+        var i,
+            initLongitudes, // list of starting longitudes for each vertexLat
+            vertexLat, // iterates through vertex latitudes
+            vertexLon, // iterates through vertex longitudes
+            vertices; // return value
+
         vertices = [];
         initLongitudes = [180, -135, -90, -135, 180];
 
         for (i = 0; i < initLongitudes.length; i += 1) {
-            lat = 90 - i * 45;
-            for (lon = initLongitudes[i]; lon <= 180; lon += 90) {
-                vertices.push(coordinates(lat, lon));
+            vertexLat = 90 - i * 45;
+            for (vertexLon = initLongitudes[i];
+                     vertexLon <= 180;
+                     vertexLon += 90) {
+                vertices.push(coordinates(vertexLat, vertexLon));
             }
         }
         return vertices;
@@ -300,7 +353,10 @@ maps = (function () {
 cartographer = (function () {
     "use strict";
 
-    var createRenderer, projection, point2d, draw;
+    var createRenderer,
+        draw, // called by index.html
+        point2d, // value object for x-y pairs
+        projection; // transforms map coordinates to pixel coordinates
 
     createRenderer = function (context) {
         var that = {};
@@ -325,8 +381,11 @@ cartographer = (function () {
 
     projection = function (canvasWidth, canvasHeight) {
         return function (mapCoords) {
-            var x = canvasWidth / 2 + mapCoords.decLongitude() * canvasWidth / 360,
-                y = canvasHeight / 2 - mapCoords.decLatitude() * canvasHeight / 180;
+            var x, y;
+            x = canvasWidth / 2 +
+                mapCoords.decLongitude() * canvasWidth / 360;
+            y = canvasHeight / 2 -
+                mapCoords.decLatitude() * canvasHeight / 180;
             return point2d(x, y);
         };
     };
