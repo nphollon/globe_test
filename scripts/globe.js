@@ -8,19 +8,12 @@ maps = (function () {
 
 
     argumentValidator = function () {
-        var that, validations,
-            forEachProperty, checkErrorCondition, argumentError;
+        var validations, checkErrorCondition, argumentError, addError, validate;
 
-        that = {};
-        validations = {};
+        validations = [];
 
-        forEachProperty = function (object, callback) {
-            var property;
-            for (property in object) {
-                if (object.hasOwnProperty(property)) {
-                    callback.call(null, object[property]);
-                }
-            }
+        argumentError = function (message) {
+            return { name: 'ArgumentError', message: message };
         };
 
         checkErrorCondition = function (error) {
@@ -29,18 +22,15 @@ maps = (function () {
             }
         };
 
-        argumentError = function (message) {
-            return { name: 'ArgumentError', message: message };
+        addError = function (message, condition) {
+            validations.push({ message: message, condition: condition });
         };
 
-        that.addError = function (name, message, condition) {
-            validations[name] = { message: message, condition: condition };
+        validate = function () {
+            validations.map(checkErrorCondition);
         };
 
-        that.validate = function () {
-            forEachProperty(validations, checkErrorCondition);
-        };
-        return that;
+        return { addError: addError, validate: validate };
     };
 
     angle = function (degrees, minutes, seconds) {
@@ -49,7 +39,7 @@ maps = (function () {
         // Private functions
             initialize, signedDegrees, signedMinutes, signedSeconds,
             errorConditions, isInteger, isUndefined,
-            fromDegreesMinutesSeconds, fromDecimalDegrees, getSign, fractionalPart;
+            fromDegreesMinutesSeconds, fromDecimalDegrees, getSign;
 
         minutesPerDegree = 60;
         secondsPerMinute = 60;
@@ -65,7 +55,6 @@ maps = (function () {
                 fromDecimalDegrees();
             }
         };
-
 
         that.toDegreesMinutesSeconds = function () {
             return {
@@ -113,8 +102,6 @@ maps = (function () {
                 ', seconds: ' + dmsForm.seconds +
                 ' }';
         };
-
-
 
         signedDegrees = function (appliedSign) {
             appliedSign = appliedSign || 1;
@@ -170,20 +157,16 @@ maps = (function () {
                 return minutes >= minutesPerDegree || seconds >= secondsPerMinute;
             };
 
-            validator.addError('invalid signs',
-                               'only the most significant component of an angle may be negative',
+            validator.addError('only the most significant component of an angle may be negative',
                                signCondition);
 
-            validator.addError('invalid fractions',
-                               'minutes and seconds must be integers',
+            validator.addError('minutes and seconds must be integers',
                                fractionCondition);
 
-            validator.addError('too many arguments',
-                               'minutes and seconds cannot be passed with non-integer degrees',
+            validator.addError('minutes and seconds cannot be passed with non-integer degrees',
                                argumentNumberCondition);
 
-            validator.addError('minutes/seconds overflow',
-                               'minutes and seconds must be less than 60',
+            validator.addError('minutes and seconds must be less than 60',
                                overflowCondition);
 
             return validator;
@@ -210,6 +193,10 @@ maps = (function () {
         };
 
         fromDecimalDegrees = function () {
+            var fractionalPart = function (number) {
+                return number - parseInt(number, 10);
+            };
+
             sign = getSign();
             absDegrees = Math.abs(degrees);
             absMinutes = fractionalPart(absDegrees) * minutesPerDegree;
@@ -219,11 +206,6 @@ maps = (function () {
             absMinutes = parseInt(absMinutes, 10);
             absSeconds = Math.round(absSeconds);
         };
-
-        fractionalPart = function (number) {
-            return number - parseInt(number, 10);
-        };
-
 
         initialize();
         return that;
