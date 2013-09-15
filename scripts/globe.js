@@ -1,16 +1,15 @@
-var argumentValidator = function () {
-    var that = {};
-    var validations = {};
+/*jslint sloppy: true */
 
-    that.addError = function (name, message, condition) {
-        validations[name] = { message: message, condition: condition };
-    };
+var argumentValidator, angle, limitedAngle, latitude, longitude, coordinates, createRenderer, draw, projection, point2d, healpix;
 
-    that.validate = function () {
-        forEachProperty(validations, checkErrorCondition);
-    };
+argumentValidator = function () {
+    var that, validations,
+        forEachProperty, checkErrorCondition, argumentError;
 
-    var forEachProperty = function (object, callback) {
+    that = {};
+    validations = {};
+
+    forEachProperty = function (object, callback) {
         var property;
         for (property in object) {
             if (object.hasOwnProperty(property)) {
@@ -19,32 +18,38 @@ var argumentValidator = function () {
         }
     };
 
-    var checkErrorCondition = function (error) {
+    checkErrorCondition = function (error) {
         if (error.condition.call()) {
             throw argumentError(error.message);
-        }        
+        }
     };
 
-    var argumentError = function (message) {
+    argumentError = function (message) {
         return { name: 'ArgumentError', message: message };
     };
 
+    that.addError = function (name, message, condition) {
+        validations[name] = { message: message, condition: condition };
+    };
+
+    that.validate = function () {
+        forEachProperty(validations, checkErrorCondition);
+    };
     return that;
-}
+};
 
-var angle = function (degrees, minutes, seconds) {
-    var that = {};
-
-    // Private fields
-    var sign, absDegrees, absMinutes, absSeconds;
+angle = function (degrees, minutes, seconds) {
+    var that, sign, absDegrees, absMinutes, absSeconds, minutesPerDegree, secondsPerMinute,
 
     // Private functions
-    var initialize, signedDegrees, signedMinutes, signedSeconds;
-    var errorConditions, allFulfill, isNonNegative, isInteger, isUndefined;
-    var fromDegreesMinutesSeconds, fromDecimalDegrees, getSign, fractionalPart;
+        initialize, signedDegrees, signedMinutes, signedSeconds,
+        errorConditions, isInteger, isUndefined,
+        fromDegreesMinutesSeconds, fromDecimalDegrees, getSign, fractionalPart;
 
-    var minutesPerDegree = 60;
-    var secondsPerMinute = 60;
+    minutesPerDegree = 60;
+    secondsPerMinute = 60;
+
+    that = {};
 
     initialize = function () {
         errorConditions().validate();
@@ -58,7 +63,7 @@ var angle = function (degrees, minutes, seconds) {
 
 
     that.toDegreesMinutesSeconds = function () {
-        return { 
+        return {
             degrees: signedDegrees(),
             minutes: signedMinutes(),
             seconds: signedSeconds()
@@ -67,7 +72,8 @@ var angle = function (degrees, minutes, seconds) {
 
     that.toDecimalDegrees = function () {
         var absDecimalDegrees = absDegrees +
-            absMinutes/minutesPerDegree + absSeconds/secondsPerMinute/minutesPerDegree;
+            absMinutes / minutesPerDegree +
+            absSeconds / secondsPerMinute / minutesPerDegree;
         return sign * absDecimalDegrees;
     };
 
@@ -76,20 +82,22 @@ var angle = function (degrees, minutes, seconds) {
     };
 
     that.equals = function (object) {
-        var isAnAngle = function () {
+        var isAnAngle, isEqualMagnitude;
+
+        isAnAngle = function () {
             return object !== undefined &&
                 object !== null &&
                 typeof object.toDegreesMinutesSeconds === 'function';
         };
 
-        var isEqualMagnitude = function () {
+        isEqualMagnitude = function () {
             var otherDMS = object.toDegreesMinutesSeconds();
             return typeof otherDMS === 'object' &&
                 signedDegrees() === otherDMS.degrees &&
                 signedMinutes() === otherDMS.minutes &&
                 signedSeconds() === otherDMS.seconds;
         };
-        
+
         return isAnAngle() && isEqualMagnitude();
     };
 
@@ -125,45 +133,53 @@ var angle = function (degrees, minutes, seconds) {
     };
 
     errorConditions = function () {
-        var validator = argumentValidator();
+        var validator, signCondition, fractionCondition, argumentNumberCondition, overflowCondition;
+
+        validator = argumentValidator();
+
+        signCondition = function () {
+            if (degrees !== 0) {
+                return minutes < 0 || seconds < 0;
+            }
+            if (minutes !== 0) {
+                return seconds < 0;
+            }
+            return false;
+        };
+
+        fractionCondition = function () {
+            if (isInteger(degrees)) {
+                return !isInteger(minutes) || !isInteger(seconds);
+            }
+            return false;
+        };
+
+        argumentNumberCondition = function () {
+            if (isInteger(degrees)) {
+                return false;
+            }
+            return !isUndefined(minutes) || !isUndefined(seconds);
+        };
+
+        overflowCondition = function () {
+            return minutes >= minutesPerDegree || seconds >= secondsPerMinute;
+        };
 
         validator.addError('invalid signs',
                            'only the most significant component of an angle may be negative',
-                           function () {
-                               if (degrees !== 0) {
-                                   return minutes < 0 || seconds < 0;
-                               } else if (minutes !== 0) {
-                                   return seconds < 0;
-                               } else {
-                                   return false;
-                               }
-                           });
+                           signCondition);
 
         validator.addError('invalid fractions',
                            'minutes and seconds must be integers',
-                           function () {
-                               if (isInteger(degrees)) {
-                                   return !isInteger(minutes) || !isInteger(seconds);
-                               } else {
-                                   return false;
-                               }
-                           });
+                           fractionCondition);
 
         validator.addError('too many arguments',
                            'minutes and seconds cannot be passed with non-integer degrees',
-                           function () {
-                               if (isInteger(degrees)) {
-                                   return false;
-                               } else {
-                                   return !isUndefined(minutes) || !isUndefined(seconds);
-                               }
-                           });
+                           argumentNumberCondition);
 
         validator.addError('minutes/seconds overflow',
                            'minutes and seconds must be less than 60',
-                           function () {
-                               return minutes >= minutesPerDegree || seconds >= secondsPerMinute;
-                           });
+                           overflowCondition);
 
         return validator;
     };
@@ -171,10 +187,10 @@ var angle = function (degrees, minutes, seconds) {
 
     getSign = function () {
         return (degrees < 0 || minutes < 0 || seconds < 0) ? -1 : 1;
-    }
+    };
 
     isInteger = function (number) {
-        return number === parseInt(number) || isUndefined(number);
+        return number === parseInt(number, 10) || isUndefined(number);
     };
 
     isUndefined = function (number) {
@@ -194,13 +210,13 @@ var angle = function (degrees, minutes, seconds) {
         absMinutes = fractionalPart(absDegrees) * minutesPerDegree;
         absSeconds = fractionalPart(absMinutes) * secondsPerMinute;
 
-        absDegrees = parseInt(absDegrees);
-        absMinutes = parseInt(absMinutes);
+        absDegrees = parseInt(absDegrees, 10);
+        absMinutes = parseInt(absMinutes, 10);
         absSeconds = Math.round(absSeconds);
     };
 
     fractionalPart = function (number) {
-        return number - parseInt(number);
+        return number - parseInt(number, 10);
     };
 
 
@@ -208,7 +224,7 @@ var angle = function (degrees, minutes, seconds) {
     return that;
 };
 
-var limitedAngle = function (absLimit, name) {
+limitedAngle = function (absLimit, name) {
     var message = (name || 'angle') +
         ' cannot exceed +/-' + absLimit + ' degrees';
 
@@ -226,40 +242,42 @@ var limitedAngle = function (absLimit, name) {
     };
 };
 
-var latitude = limitedAngle(90, 'latitude');
+latitude = limitedAngle(90, 'latitude');
 
-var longitude = limitedAngle(180, 'longitude');
+longitude = limitedAngle(180, 'longitude');
 
-var coordinates = function (latDecimal, lonDecimal) {
-    var that = {};
-    var latAngle = latitude(latDecimal);
-    var lonAngle = longitude(lonDecimal);
+coordinates = function (latDecimal, lonDecimal) {
+    var that, latAngle, lonAngle, polarLat;
 
-    var polarLat = 90;
+    that = {};
+    latAngle = latitude(latDecimal);
+    lonAngle = longitude(lonDecimal);
 
-    that.latitude = function () { return latAngle; }
-    that.decLatitude = function () { return latAngle.toDecimalDegrees(); }
+    polarLat = 90;
+
+    that.latitude = function () { return latAngle; };
+    that.decLatitude = function () { return latAngle.toDecimalDegrees(); };
     that.longitude = function () { return lonAngle; };
-    that.decLongitude = function () { return lonAngle.toDecimalDegrees(); }
+    that.decLongitude = function () { return lonAngle.toDecimalDegrees(); };
 
     that.equals = function (object) {
-        var isCoordinates = function () {
-            return object !== null && object !== undefined && 
+        var isCoordinates, hasEqualComponents, isAtSamePole;
+
+        isCoordinates = function () {
+            return object !== null && object !== undefined &&
                 typeof object.latitude === 'function' &&
                 typeof object.longitude === 'function';
         };
 
-        var hasEqualComponents = function () {
+        hasEqualComponents = function () {
             return latAngle.equals(object.latitude()) &&
                 lonAngle.equals(object.longitude());
         };
 
-        var isAtSamePole = function () {
-            return latAngle.equals(angle(polarLat)) &&
-                object.latitude().equals(angle(polarLat)) ||
-                latAngle.equals(angle(-polarLat)) &&
-                object.latitude().equals(angle(-polarLat));
-        }
+        isAtSamePole = function () {
+            return (latAngle.equals(angle(polarLat)) && object.latitude().equals(angle(polarLat))) ||
+                (latAngle.equals(angle(-polarLat)) && object.latitude().equals(angle(-polarLat)));
+        };
 
         return isCoordinates() && (isAtSamePole() || hasEqualComponents());
     };
@@ -267,9 +285,7 @@ var coordinates = function (latDecimal, lonDecimal) {
     return that;
 };
 
-"use strict";
-
-var createRenderer = function (context) {
+createRenderer = function (context) {
     var that = {};
 
     that.drawMarker = function (point) {
@@ -283,37 +299,38 @@ var createRenderer = function (context) {
     return that;
 };
 
-var draw = function (canvas) {
-    var renderer = createRenderer(canvas.getContext('2d'));
-    var proj = projection(canvas.width, canvas.height);
-    var coords = healpix.basePixelVertices();
-    var points = coords.map(proj);
+draw = function (canvas) {
+    var renderer, proj, coords, points;
+    renderer = createRenderer(canvas.getContext('2d'));
+    proj = projection(canvas.width, canvas.height);
+    coords = healpix.basePixelVertices();
+    points = coords.map(proj);
     renderer.drawMarkers(points);
 };
 
-var projection = function (canvasWidth, canvasHeight) {
+projection = function (canvasWidth, canvasHeight) {
     return function (mapCoords) {
-        var x =  canvasWidth / 2 + mapCoords.decLongitude() * canvasWidth / 360;
-        var y =  canvasHeight / 2 - mapCoords.decLatitude() * canvasHeight / 180;
+        var x = canvasWidth / 2 + mapCoords.decLongitude() * canvasWidth / 360,
+            y = canvasHeight / 2 - mapCoords.decLatitude() * canvasHeight / 180;
         return point2d(x, y);
     };
 };
 
-var point2d = function (x, y) {
+point2d = function (x, y) {
     var that = {};
     that.x = function () { return x; };
     that.y = function () { return y; };
     return that;
-}
+};
 
-var healpix = {};
+healpix = {};
 
 healpix.basePixelVertices = function () {
-    var vertices = [];
-    var initLongitudes = [180, -135, -90, -135, 180];
-    var i, lon, lat;
+    var vertices, initLongitudes, i, lon, lat;
+    vertices = [];
+    initLongitudes = [180, -135, -90, -135, 180];
 
-    for (i = 0; i < initLongitudes.length; i++) {
+    for (i = 0; i < initLongitudes.length; i += 1) {
         lat = 90 - i * 45;
         for (lon = initLongitudes[i]; lon <= 180; lon += 90) {
             vertices.push(coordinates(lat, lon));

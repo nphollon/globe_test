@@ -1,15 +1,19 @@
+/*jslint sloppy: true */
+/*global jasmine, describe, beforeEach, it, expect,
+  angle, latitude, longitude, coordinates, createRenderer, point2d, projection, healpix */
+
 describe("Angle", function () {
     beforeEach(function () {
         this.addMatchers({
 
             toEqualAngle: function (expected) {
-                var actual = this.actual;
-                var notText = this.isNot ? "false" : "true";
+                var actual = this.actual,
+                    notText = this.isNot ? "false" : "true";
 
                 this.message = function () {
                     return "Expected " + actual + ".equals("
                         + expected + ") to be " + notText;
-                }
+                };
 
                 return actual.equals(expected);
             }
@@ -87,7 +91,7 @@ describe("Angle", function () {
             expect(dmsForm.minutes).toEqual(30);
         });
 
-        it("should round seconds seconds", function() {
+        it("should round seconds seconds", function () {
             var dmsForm = angle(1e-3).toDegreesMinutesSeconds();
             expect(dmsForm.seconds).toEqual(4);
         });
@@ -112,8 +116,11 @@ describe("Angle", function () {
         });
 
         it("should not be equal to non-Angle objects", function () {
+            var emptyObject, emptyDmsObject;
             emptyObject = {};
-            emptyDmsObject = { toDegreesMinutesSeconds: function () {} };
+            emptyDmsObject = {
+                toDegreesMinutesSeconds: function () { return undefined; }
+            };
             expect(testAngle).not.toEqualAngle(emptyObject);
             expect(testAngle).not.toEqualAngle(emptyDmsObject);
         });
@@ -127,45 +134,49 @@ describe("Angle", function () {
         it("should return decimal representation", function () {
             expect(angle(1, 0, 0).toDecimalDegrees()).toEqual(1);
             expect(angle(1, 30, 0).toDecimalDegrees()).toEqual(1.5);
-            expect(angle(1, 0, 1).toDecimalDegrees()).toEqual(3601/3600);
+            expect(angle(1, 0, 1).toDecimalDegrees()).toEqual(3601 / 3600);
 
             expect(angle(-1, 30, 0).toDecimalDegrees()).toEqual(-1.5);
-            expect(angle(-1, 0, 1).toDecimalDegrees()).toEqual(-3601/3600);
+            expect(angle(-1, 0, 1).toDecimalDegrees()).toEqual(-3601 / 3600);
 
-            expect(angle(0, 30, 1).toDecimalDegrees()).toEqual(1801/3600);
-            expect(angle(0, -30, 1).toDecimalDegrees()).toEqual(-1801/3600);
-            expect(angle(0, 0, -1).toDecimalDegrees()).toEqual(-1/3600);
+            expect(angle(0, 30, 1).toDecimalDegrees()).toEqual(1801 / 3600);
+            expect(angle(0, -30, 1).toDecimalDegrees()).toEqual(-1801 / 3600);
+            expect(angle(0, 0, -1).toDecimalDegrees()).toEqual(-1 / 3600);
         });
     });
 
     describe("negative()", function () {
         it("should return a negative angle if original angle positive", function () {
-            var negDegrees = angle(1, 1, 1).negative();
+            var negDegrees, negMinutes, negSeconds;
+
+            negDegrees = angle(1, 1, 1).negative();
             expect(angle(-1, 1, 1)).toEqualAngle(negDegrees);
 
-            var negMinutes = angle(0, 1, 1).negative();
+            negMinutes = angle(0, 1, 1).negative();
             expect(angle(0, -1, 1)).toEqualAngle(negMinutes);
 
-            var negSeconds = angle(0, 0, 1).negative();
+            negSeconds = angle(0, 0, 1).negative();
             expect(angle(0, 0, -1)).toEqualAngle(negSeconds);
         });
 
         it("should return a positive angle if original angle negative", function () {
-            var negDegrees = angle(-1, 1, 1).negative();
+            var negDegrees, negMinutes, negSeconds;
+
+            negDegrees = angle(-1, 1, 1).negative();
             expect(angle(1, 1, 1)).toEqualAngle(negDegrees);
 
-            var negMinutes = angle(0, -1, 1).negative();
+            negMinutes = angle(0, -1, 1).negative();
             expect(angle(0, 1, 1)).toEqualAngle(negMinutes);
 
-            var negSeconds = angle(0, 0, -1).negative();
+            negSeconds = angle(0, 0, -1).negative();
             expect(angle(0, 0, 1)).toEqualAngle(negSeconds);
         });
     });
 
     describe("toString()", function () {
         it("should string of toDegreesMinutesSeconds()", function () {
-            var testAngle = angle(1, 2, 3);
-            var expectedString = '{ degrees: 1, minutes: 2, seconds: 3 }';
+            var testAngle = angle(1, 2, 3),
+                expectedString = '{ degrees: 1, minutes: 2, seconds: 3 }';
             expect(testAngle.toString()).toEqual(expectedString);
         });
     });
@@ -173,8 +184,8 @@ describe("Angle", function () {
 
 describe("Latitude", function () {
     it("should be an angle", function () {
-        var latitudeObject = latitude(1, 2, 3);
-        var angleObject = angle(1, 2, 3);
+        var latitudeObject = latitude(1, 2, 3),
+            angleObject = angle(1, 2, 3);
 
         expect(angleObject.equals(latitudeObject)).toBeTruthy();
     });
@@ -188,8 +199,8 @@ describe("Latitude", function () {
 
 describe("Longitude", function () {
     it("should be an angle", function () {
-        var longitudeObject = longitude(1, 2, 3);
-        var angleObject = angle(1, 2, 3);
+        var longitudeObject = longitude(1, 2, 3),
+            angleObject = angle(1, 2, 3);
 
         expect(angleObject.equals(longitudeObject)).toBeTruthy();
     });
@@ -201,7 +212,7 @@ describe("Longitude", function () {
     });
 });
 
-describe("Coordinates", function() {
+describe("Coordinates", function () {
     it("should have a latitude and longitude", function () {
         var coord = coordinates(1.5, 2.7);
         expect(angle(1.5).equals(coord.latitude())).toBeTruthy();
@@ -225,24 +236,22 @@ describe("Coordinates", function() {
         });
 
         it("should be equal if both coordinates are at the same pole", function () {
-            var northPole = coordinates(90, 0);
-            var southPole = coordinates(-90, 0);
+            var northPole = coordinates(90, 0),
+                southPole = coordinates(-90, 0);
             expect(northPole.equals(coordinates(90, 100))).toBeTruthy();
             expect(southPole.equals(coordinates(-90, 100))).toBeTruthy();
         });
 
         it("should be unequal to things that aren't coordinates", function () {
             expect(coord.equals(null)).toBeFalsy();
-            expect(coord.equals(undefined)).toBeFalsy();            
-            expect(coord.equals(angle(0))).toBeFalsy();            
+            expect(coord.equals(undefined)).toBeFalsy();
+            expect(coord.equals(angle(0))).toBeFalsy();
         });
     });
 });
 
 describe("Renderer", function () {
-    var context;
-    var renderer;
-    var pt;
+    var context, renderer, pt;
 
     beforeEach(function () {
         context = jasmine.createSpyObj('context', ['fillRect']);
@@ -269,8 +278,7 @@ describe("Equirectangular projection", function () {
     var plateCaree, verifyProjection;
 
     verifyProjection = function (mapXY, canvasXY) {
-        var mapCoords = coordinates(mapXY[0], mapXY[1]);
-        var canvasCoords = plateCaree(mapCoords);
+        var canvasCoords = plateCaree(coordinates(mapXY[0], mapXY[1]));
         expect(canvasCoords.x()).toEqual(canvasXY[0]);
         expect(canvasCoords.y()).toEqual(canvasXY[1]);
     };
@@ -279,7 +287,7 @@ describe("Equirectangular projection", function () {
         beforeEach(function () {
             plateCaree = projection(360, 180);
         });
-        
+
         it("should translate coords (0, 0) to the canvas center", function () {
             verifyProjection([0, 0], [180, 90]);
         });
@@ -297,7 +305,7 @@ describe("Equirectangular projection", function () {
         beforeEach(function () {
             plateCaree = projection(180, 90);
         });
-        
+
         it("should translate coords (2, 0) to 1px above the canvas center", function () {
             verifyProjection([2, 0], [90, 44]);
         });
@@ -311,7 +319,9 @@ describe("Equirectangular projection", function () {
 describe("Healpix", function () {
     describe("basePixelVertices()", function () {
         it("should return list of 12 points", function () {
-            var expectedCoords = [
+            var expectedCoords, actualCoords, i;
+
+            expectedCoords = [
                 coordinates(90, 0),
                 coordinates(45, -135),
                 coordinates(45, -45),
@@ -325,11 +335,12 @@ describe("Healpix", function () {
                 coordinates(-45, -45),
                 coordinates(-45, 45),
                 coordinates(-45, 135),
-                coordinates(-90, 0),
+                coordinates(-90, 0)
             ];
-            var actualCoords = healpix.basePixelVertices();
-            var i;
-            for (i in expectedCoords) {
+
+            actualCoords = healpix.basePixelVertices();
+
+            for (i = 0; i < expectedCoords.length; i += 1) {
                 expect(expectedCoords[i].equals(actualCoords[i])).toBeTruthy();
             }
         });
