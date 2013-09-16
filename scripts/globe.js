@@ -102,8 +102,7 @@ maps = (function () {
                 isEqualMagnitude; // true if DMS values are equal
 
             isAnAngle = function () {
-                return object !== undefined &&
-                    object !== null &&
+                return object &&
                     typeof object.toDegreesMinutesSeconds === 'function';
             };
 
@@ -295,7 +294,7 @@ maps = (function () {
                 hasEqualComponents; // true if latitudes and longitudes are eq
 
             isCoordinates = function () {
-                return object !== null && object !== undefined &&
+                return object &&
                     typeof object.latitude === 'function' &&
                     typeof object.longitude === 'function';
             };
@@ -387,8 +386,7 @@ cartographer = (function () {
         };
 
         that.equals = function (object) {
-            return object !== undefined &&
-                object !== null &&
+            return object &&
                 typeof object.x === 'function' &&
                 typeof object.y === 'function' &&
                 x === object.x() && y === object.y();
