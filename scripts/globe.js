@@ -44,26 +44,19 @@ maps = (function () {
     };
 
     angle = function (degrees, minutes, seconds) {
-        var absDegrees, // absolute value of degrees
-            absMinutes, // absolute value of minutes
-            absSeconds, // absolute value of seconds
-            minutesPerDegree = 60,
+        var minutesPerDegree = 60,
             secondsPerMinute = 60,
-            sign, // sign of angle (+1 or -1)
+            totalSeconds,
             that, // return value; contains public methods
 
             // Functions
             errorConditions, // constructs an argumentValidator
             fromDegreesMinutesSeconds, // constructor helper
             fromDecimalDegrees, // constructor helper
-            getSign,
             initialize, // constructor
             isInteger,
-            isUndefined,
-            signedDegrees, // applies sign to absDegrees
-            signedMinutes, // applies sign to absMinutes
-            signedSeconds; // applies sign to absSeconds
-
+            isUndefined;
+            
         that = {};
 
         initialize = function () {
@@ -77,44 +70,45 @@ maps = (function () {
         };
 
         that.toDegreesMinutesSeconds = function () {
+            var integerDivide = function (dividend, divisor) {
+                var result = {};
+                result.remainder = dividend % divisor;
+                result.quotient = (dividend - result.remainder) / divisor;
+                if (result.quotient !== 0) {
+                    result.remainder = Math.abs(result.remainder);
+                }
+                return result;
+            };
+
+            var minuteSplit = integerDivide(totalSeconds, secondsPerMinute);
+            var degreeSplit = integerDivide(minuteSplit.quotient, minutesPerDegree);
+
             return {
-                degrees: signedDegrees(),
-                minutes: signedMinutes(),
-                seconds: signedSeconds()
+                degrees: degreeSplit.quotient,
+                minutes: degreeSplit.remainder,
+                seconds: minuteSplit.remainder
             };
         };
 
         that.toDecimalDegrees = function () {
-            var absDecimalDegrees = absDegrees +
-                absMinutes / minutesPerDegree +
-                absSeconds / secondsPerMinute / minutesPerDegree;
-            return sign * absDecimalDegrees;
+            return totalSeconds / (secondsPerMinute * minutesPerDegree);
+        };
+
+        that.toSeconds = function () {
+            return totalSeconds;
         };
 
         that.negative = function () {
-            return angle(signedDegrees(-1),
-                         signedMinutes(-1),
-                         signedSeconds(-1));
+            return angle(-this.toDecimalDegrees());
         };
 
         that.equals = function (object) {
-            var isAnAngle, // true if object is comparable to angle
-                isEqualMagnitude; // true if DMS values are equal
-
-            isAnAngle = function () {
-                return object &&
-                    typeof object.toDegreesMinutesSeconds === 'function';
-            };
-
-            isEqualMagnitude = function () {
-                var otherDMS = object.toDegreesMinutesSeconds();
-                return typeof otherDMS === 'object' &&
-                    signedDegrees() === otherDMS.degrees &&
-                    signedMinutes() === otherDMS.minutes &&
-                    signedSeconds() === otherDMS.seconds;
-            };
-
-            return isAnAngle() && isEqualMagnitude();
+            var objectNotAnAngle;
+            try {
+                return totalSeconds === object.toSeconds();
+            } catch (objectNotAnAngle) {
+                return false;
+            }
         };
 
         that.toString = function () {
@@ -123,27 +117,6 @@ maps = (function () {
                 ', minutes: ' + dmsForm.minutes +
                 ', seconds: ' + dmsForm.seconds +
                 ' }';
-        };
-
-        signedDegrees = function (appliedSign) {
-            appliedSign = appliedSign || 1;
-            return appliedSign * sign * absDegrees;
-        };
-
-        signedMinutes = function (appliedSign) {
-            appliedSign = appliedSign || 1;
-            if (absDegrees === 0) {
-                return appliedSign * sign * absMinutes;
-            }
-            return absMinutes;
-        };
-
-        signedSeconds = function (appliedSign) {
-            appliedSign = appliedSign || 1;
-            if (absDegrees === 0 && absMinutes === 0) {
-                return appliedSign * sign * absSeconds;
-            }
-            return absSeconds;
         };
 
         errorConditions = function () {
@@ -201,11 +174,6 @@ maps = (function () {
             return validator;
         };
 
-
-        getSign = function () {
-            return (degrees < 0 || minutes < 0 || seconds < 0) ? -1 : 1;
-        };
-
         isInteger = function (number) {
             return number === parseInt(number, 10) || isUndefined(number);
         };
@@ -215,25 +183,17 @@ maps = (function () {
         };
 
         fromDegreesMinutesSeconds = function () {
-            sign = getSign();
-            absDegrees = Math.abs(degrees);
-            absMinutes = Math.abs(minutes) || 0;
-            absSeconds = Math.abs(seconds) || 0;
+            var sign = (degrees < 0 || minutes < 0 || seconds < 0) ? -1 : 1;
+            var absDegrees = Math.abs(degrees);
+            var absMinutes = Math.abs(minutes) || 0;
+            var absSeconds = Math.abs(seconds) || 0;
+            totalSeconds = sign * (absDegrees * minutesPerDegree * secondsPerMinute +
+                                   absMinutes * secondsPerMinute +
+                                   absSeconds);
         };
 
         fromDecimalDegrees = function () {
-            var fractionalPart = function (number) {
-                return number - parseInt(number, 10);
-            };
-
-            sign = getSign();
-            absDegrees = Math.abs(degrees);
-            absMinutes = fractionalPart(absDegrees) * minutesPerDegree;
-            absSeconds = fractionalPart(absMinutes) * secondsPerMinute;
-
-            absDegrees = parseInt(absDegrees, 10);
-            absMinutes = parseInt(absMinutes, 10);
-            absSeconds = Math.round(absSeconds);
+            totalSeconds = Math.round(degrees * minutesPerDegree * secondsPerMinute);
         };
 
         initialize();

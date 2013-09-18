@@ -154,6 +154,12 @@ describe("Maps", function () {
             });
         });
 
+        describe("toSeconds()", function () {
+            it("should convert DMS into seconds", function () {
+                expect(angle(1, 1, 1).toSeconds()).toEqual(3661);
+            });
+        });
+
         describe("negative()", function () {
             it("should return a negative angle if original angle positive", function () {
                 var negDegrees, negMinutes, negSeconds;
