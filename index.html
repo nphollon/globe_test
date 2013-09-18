@@ -1,14 +1,20 @@
+<!DOCTYPE html>
 <html>
-<head>
-  <title>Globe Test</title>
-  <script type="text/javascript" src="scripts/globe.js"></script>
-  <style type="text/css">
-    canvas { border: 1px solid black; }
-  </style>
-</head>
-<body onload="cartographer.draw(document.getElementById('canvas'));">
-  <canvas id="canvas" height="200" width="300">
-    Sorry. Your browser does not support graphics canvas.
-  </canvas>
-</body>
+  <head>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+    <meta name="keywords" content="map projection, javascript" />
+    <meta name="description" content="This is a test page for a JavaScript map
+                                      projection library I am developing." />
+    <title>Globe test</title>
+    
+    <link rel="stylesheet" type="text/css" href="stylesheets/styles.css" />
+  </head>
+
+  <body onload="cartographer.draw(document.getElementById('canvas'));">
+    <canvas id="canvas" height="200" width="300">
+      Sorry. Your browser does not support graphics canvas.
+    </canvas>
+
+    <script type="text/javascript" src="scripts/globe.js"></script>
+  </body>
 </html>
