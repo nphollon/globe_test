@@ -1,76 +1,82 @@
+/*global window, document */
+
 var cartographer, // Namespace for drawing- & projection-related functions
     maps; // Namespace for coordinate-related functions
 
 maps = (function () {
     "use strict";
 
-    var angle,
-        argumentValidator,
+    var angleFromDegrees,
+        angleFromDMS,
+        angleFromSeconds,
         coordinates,
         healpix,
         latitude, // returns angle bounded at +/-90 deg
         limitedAngle, // returns angle bounded by given value
         longitude; // returns angle bounded at +/- 180 deg
 
+    var minutesPerDegree = 60,
+        secondsPerMinute = 60;
 
-    argumentValidator = function () {
-        var addError, // adds new error condition to validations list
-            argumentError, // returns error object
-            checkErrorCondition, // throws error if given condition fails
-            validate, // maps checkErrorCondition onto validations
-            validations; // stores error conditions and messages
+    angleFromDegrees = function (degrees) {
+        return angleFromSeconds(Math.round(degrees * minutesPerDegree * secondsPerMinute));
+    };
 
-        validations = [];
+    angleFromDMS = function (degrees, minutes, seconds) {
+        var argumentError,
+            overflowCondition, // true if minutes or seconds >= 60
+            signCondition, // true if multiple negative arguments
+            sign,
+            absDegrees,
+            absMinutes,
+            absSeconds,
+            totalSeconds;
 
         argumentError = function (message) {
             return { name: 'ArgumentError', message: message };
         };
 
-        checkErrorCondition = function (error) {
-            if (error.condition.call()) {
-                throw argumentError(error.message);
+        signCondition = function () {
+            if (degrees !== 0) {
+                return minutes < 0 || seconds < 0;
             }
+            if (minutes !== 0) {
+                return seconds < 0;
+            }
+            return false;
         };
 
-        addError = function (message, condition) {
-            validations.push({ message: message, condition: condition });
+        overflowCondition = function () {
+            return minutes >= minutesPerDegree ||
+                seconds >= secondsPerMinute;
         };
 
-        validate = function () {
-            validations.map(checkErrorCondition);
-        };
+        if (signCondition()) {
+            throw argumentError('only the most significant component ' +
+              'of an angle may be negative');
+        }
 
-        return { addError: addError, validate: validate };
+        if (overflowCondition()) {
+            throw argumentError('minutes and seconds must be less than 60');
+        }
+
+        sign = (degrees < 0 || minutes < 0 || seconds < 0) ? -1 : 1;
+        absDegrees = Math.abs(degrees);
+        absMinutes = Math.abs(minutes) || 0;
+        absSeconds = Math.abs(seconds) || 0;
+        totalSeconds = sign * (absDegrees * minutesPerDegree * secondsPerMinute +
+                           absMinutes * secondsPerMinute +
+                           absSeconds);
+
+        return angleFromSeconds(totalSeconds);
     };
 
-    angle = function (degrees, minutes, seconds) {
-        var minutesPerDegree = 60,
-            secondsPerMinute = 60,
-            totalSeconds,
-            that, // return value; contains public methods
-
-            // Functions
-            errorConditions, // constructs an argumentValidator
-            fromDegreesMinutesSeconds, // constructor helper
-            fromDecimalDegrees, // constructor helper
-            initialize, // constructor
-            isInteger,
-            isUndefined;
-            
-        that = {};
-
-        initialize = function () {
-            errorConditions().validate();
-
-            if (isInteger(degrees)) {
-                fromDegreesMinutesSeconds();
-            } else {
-                fromDecimalDegrees();
-            }
-        };
+    angleFromSeconds = function (seconds) {
+        var that = {};
 
         that.toDegreesMinutesSeconds = function () {
-            var integerDivide = function (dividend, divisor) {
+            var integerDivide, minuteSplit, degreeSplit;
+            integerDivide = function (dividend, divisor) {
                 var result = {};
                 result.remainder = dividend % divisor;
                 result.quotient = (dividend - result.remainder) / divisor;
@@ -80,8 +86,8 @@ maps = (function () {
                 return result;
             };
 
-            var minuteSplit = integerDivide(totalSeconds, secondsPerMinute);
-            var degreeSplit = integerDivide(minuteSplit.quotient, minutesPerDegree);
+            minuteSplit = integerDivide(seconds, secondsPerMinute);
+            degreeSplit = integerDivide(minuteSplit.quotient, minutesPerDegree);
 
             return {
                 degrees: degreeSplit.quotient,
@@ -91,21 +97,20 @@ maps = (function () {
         };
 
         that.toDecimalDegrees = function () {
-            return totalSeconds / (secondsPerMinute * minutesPerDegree);
+            return seconds / (secondsPerMinute * minutesPerDegree);
         };
 
         that.toSeconds = function () {
-            return totalSeconds;
+            return seconds;
         };
 
         that.negative = function () {
-            return angle(-this.toDecimalDegrees());
+            return angleFromSeconds(-seconds);
         };
 
         that.equals = function (object) {
-            var objectNotAnAngle;
             try {
-                return totalSeconds === object.toSeconds();
+                return seconds === object.toSeconds();
             } catch (objectNotAnAngle) {
                 return false;
             }
@@ -119,84 +124,6 @@ maps = (function () {
                 ' }';
         };
 
-        errorConditions = function () {
-            var argumentNumberCondition, // true if too many arguments passed
-                fractionCondition, // true if multiple non-integer arguments
-                overflowCondition, // true if minutes or seconds > 60
-                signCondition, // true if multiple negative arguments
-                validator; // return value
-
-            validator = argumentValidator();
-
-            signCondition = function () {
-                if (degrees !== 0) {
-                    return minutes < 0 || seconds < 0;
-                }
-                if (minutes !== 0) {
-                    return seconds < 0;
-                }
-                return false;
-            };
-
-            fractionCondition = function () {
-                if (isInteger(degrees)) {
-                    return !isInteger(minutes) || !isInteger(seconds);
-                }
-                return false;
-            };
-
-            argumentNumberCondition = function () {
-                if (isInteger(degrees)) {
-                    return false;
-                }
-                return !isUndefined(minutes) || !isUndefined(seconds);
-            };
-
-            overflowCondition = function () {
-                return minutes >= minutesPerDegree ||
-                    seconds >= secondsPerMinute;
-            };
-
-            validator.addError('only the most significant component ' +
-                               'of an angle may be negative',
-                               signCondition);
-
-            validator.addError('minutes and seconds must be integers',
-                               fractionCondition);
-
-            validator.addError('minutes and seconds cannot be passed ' +
-                               'with non-integer degrees',
-                               argumentNumberCondition);
-
-            validator.addError('minutes and seconds must be less than 60',
-                               overflowCondition);
-
-            return validator;
-        };
-
-        isInteger = function (number) {
-            return number === parseInt(number, 10) || isUndefined(number);
-        };
-
-        isUndefined = function (number) {
-            return number === undefined;
-        };
-
-        fromDegreesMinutesSeconds = function () {
-            var sign = (degrees < 0 || minutes < 0 || seconds < 0) ? -1 : 1;
-            var absDegrees = Math.abs(degrees);
-            var absMinutes = Math.abs(minutes) || 0;
-            var absSeconds = Math.abs(seconds) || 0;
-            totalSeconds = sign * (absDegrees * minutesPerDegree * secondsPerMinute +
-                                   absMinutes * secondsPerMinute +
-                                   absSeconds);
-        };
-
-        fromDecimalDegrees = function () {
-            totalSeconds = Math.round(degrees * minutesPerDegree * secondsPerMinute);
-        };
-
-        initialize();
         return that;
     };
 
@@ -205,7 +132,7 @@ maps = (function () {
             ' cannot exceed +/-' + absLimit + ' degrees';
 
         return function (degrees, minutes, seconds) {
-            var that =  angle(degrees, minutes, seconds);
+            var that =  angleFromDMS(degrees, minutes, seconds);
 
             if (Math.abs(that.toDecimalDegrees()) > absLimit) {
                 throw {
@@ -265,10 +192,10 @@ maps = (function () {
             };
 
             isAtSamePole = function () {
-                return (latAngle.equals(angle(polarLat)) &&
-                        object.latitude().equals(angle(polarLat))) ||
-                    (latAngle.equals(angle(-polarLat)) &&
-                     object.latitude().equals(angle(-polarLat)));
+                return (latAngle.equals(angleFromDegrees(polarLat)) &&
+                        object.latitude().equals(angleFromDegrees(polarLat))) ||
+                    (latAngle.equals(angleFromDegrees(-polarLat)) &&
+                     object.latitude().equals(angleFromDegrees(-polarLat)));
             };
 
             return isCoordinates() && (isAtSamePole() || hasEqualComponents());
@@ -301,7 +228,9 @@ maps = (function () {
     };
 
     return {
-        angle: angle,
+        angleFromDegrees: angleFromDegrees,
+        angleFromDMS: angleFromDMS,
+        angleFromSeconds: angleFromSeconds,
         latitude: latitude,
         longitude: longitude,
         coordinates: coordinates,
@@ -388,3 +317,11 @@ cartographer = (function () {
         draw: draw
     };
 }());
+
+window.onload = function () {
+    "use strict";
+    var canvasElement = document.getElementById('canvas');
+    if (canvasElement) {
+        cartographer.draw(canvasElement);
+    }
+};
