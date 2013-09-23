@@ -1,4 +1,5 @@
 /*global window, document */
+/*jslint maxlen: 80 */
 
 var cartographer, // Namespace for drawing- & projection-related functions
     maps; // Namespace for coordinate-related functions
@@ -13,13 +14,16 @@ maps = (function () {
         healpix,
         latitude, // returns angle bounded at +/-90 deg
         limitedAngle, // returns angle bounded by given value
-        longitude; // returns angle bounded at +/- 180 deg
+        longitude, // returns angle bounded at +/- 180 deg
 
-    var minutesPerDegree = 60,
-        secondsPerMinute = 60;
+        minutesPerDegree = 60,
+        secondsPerMinute = 60,
+
+        that = {};
 
     angleFromDegrees = function (degrees) {
-        return angleFromSeconds(Math.round(degrees * minutesPerDegree * secondsPerMinute));
+        var totalSeconds = degrees * minutesPerDegree * secondsPerMinute;
+        return angleFromSeconds(totalSeconds);
     };
 
     angleFromDMS = function (degrees, minutes, seconds) {
@@ -53,7 +57,7 @@ maps = (function () {
 
         if (signCondition()) {
             throw argumentError('only the most significant component ' +
-              'of an angle may be negative');
+                                'of an angle may be negative');
         }
 
         if (overflowCondition()) {
@@ -64,18 +68,21 @@ maps = (function () {
         absDegrees = Math.abs(degrees);
         absMinutes = Math.abs(minutes) || 0;
         absSeconds = Math.abs(seconds) || 0;
-        totalSeconds = sign * (absDegrees * minutesPerDegree * secondsPerMinute +
-                           absMinutes * secondsPerMinute +
-                           absSeconds);
+        totalSeconds = sign *
+            (absDegrees * minutesPerDegree * secondsPerMinute +
+             absMinutes * secondsPerMinute +
+             absSeconds);
 
         return angleFromSeconds(totalSeconds);
     };
 
     angleFromSeconds = function (seconds) {
-        var that = {};
+        var intSeconds = Math.round(seconds),
+            that = {};
 
         that.toDegreesMinutesSeconds = function () {
             var integerDivide, minuteSplit, degreeSplit;
+
             integerDivide = function (dividend, divisor) {
                 var result = {};
                 result.remainder = dividend % divisor;
@@ -86,7 +93,7 @@ maps = (function () {
                 return result;
             };
 
-            minuteSplit = integerDivide(seconds, secondsPerMinute);
+            minuteSplit = integerDivide(intSeconds, secondsPerMinute);
             degreeSplit = integerDivide(minuteSplit.quotient, minutesPerDegree);
 
             return {
@@ -97,20 +104,20 @@ maps = (function () {
         };
 
         that.toDecimalDegrees = function () {
-            return seconds / (secondsPerMinute * minutesPerDegree);
+            return intSeconds / (secondsPerMinute * minutesPerDegree);
         };
 
         that.toSeconds = function () {
-            return seconds;
+            return intSeconds;
         };
 
         that.negative = function () {
-            return angleFromSeconds(-seconds);
+            return angleFromSeconds(-intSeconds);
         };
 
         that.equals = function (object) {
             try {
-                return seconds === object.toSeconds();
+                return intSeconds === object.toSeconds();
             } catch (objectNotAnAngle) {
                 return false;
             }
