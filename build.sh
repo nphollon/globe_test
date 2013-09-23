@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /usr/bin/env dash
 
 assert() {
     out=$(eval $1)
