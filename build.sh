@@ -1,19 +1,20 @@
 #! /bin/sh
 
-echo "Running JSLint..."
-out=$(jslint scripts/globe.js)
+assert() {
+    out=$(eval $1)
+    if [ $? != 0 ]; then
+        echo "$out"
+        exit
+    fi
+}
 
-if [ $? != 0 ]; then
-    echo "$out"
-    exit
-fi
+echo "Running JSLint..."
+assert "jslint scripts/globe.js"
     
 echo "Running Jasmine..."
-out=$(phantomjs ~/javascript_projects/run-jasmine.js file:///home/nhollon/javascript_projects/globe_test/spec_runner.html)
+assert "phantomjs run-jasmine.js spec_runner.html"
 
-if [ $? != 0 ]; then
-    echo "$out"
-    exit
-fi
+echo "Running Google Closure..."
+assert "java -jar compiler.jar --js scripts/globe.js --js_output_file scripts/min.js"
 
 echo "Build successful!"
