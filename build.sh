@@ -8,13 +8,16 @@ assert() {
     fi
 }
 
-echo "Running JSLint..."
+echo "Validating..."
 assert "jslint scripts/globe.js"
-    
-echo "Running Jasmine..."
+
+echo "Testing..."
 assert "phantomjs run-jasmine.js spec_runner.html"
 
-echo "Running Google Closure..."
+echo "Minifying..."
 assert "java -jar compiler.jar --js scripts/globe.js --js_output_file scripts/min.js"
+
+echo "Testing minified JS..."
+assert "phantomjs run-jasmine.js min_spec_runner.html"
 
 echo "Build successful!"

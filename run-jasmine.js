@@ -50,8 +50,8 @@ page.onConsoleMessage = function(msg) {
 
 page.open(system.args[1], function(status){
     if (status !== "success") {
-        console.log("Unable to access network");
-        phantom.exit();
+        console.log("Could not access " + system.args[1]);
+        phantom.exit(1);
     } else {
         waitFor(function(){
             return page.evaluate(function(){
