@@ -1,5 +1,5 @@
-/*global jasmine, describe, beforeEach, it, expect,
-  maps, cartographer */
+var maps = require("../scripts/maps.js");
+var cartographer = require("../scripts/cartographer.js");
 
 describe("Maps", function () {
     "use strict";

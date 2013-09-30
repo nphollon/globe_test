@@ -1,9 +1,9 @@
-/*global window, document, cartographer */
-/*jslint maxlen: 80 */
+/*global window, document, require */
 
 window.onload = function () {
     "use strict";
-    var canvasElement = document.getElementById('canvas');
+    var cartographer = require("./cartographer.js");
+    var canvasElement = document.getElementById("canvas");
     if (canvasElement) {
         cartographer.draw(canvasElement);
     }

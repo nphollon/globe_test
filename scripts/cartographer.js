@@ -1,82 +1,69 @@
-/*global maps */
-/*jslint maxlen: 80 */
+/*global exports, require */
 
-var cartographer = (function () {
-    "use strict";
+"use strict";
 
-    var createRenderer,
-        draw, // called by index.html
-        point2d, // value object for x-y pairs
-        projection; // transforms map coordinates to pixel coordinates
+var maps = require("./maps.js");
 
-    createRenderer = function (context) {
-        var that = {};
+exports.createRenderer = function (context) {
+    var that = {};
 
-        that.drawMarker = function (point) {
-            context.fillRect(point.x() - 5, point.y() - 5, 10, 10);
-        };
-
-        that.drawMarkers = function (points) {
-            points.map(this.drawMarker, this);
-        };
-
-        return that;
+    that.drawMarker = function (point) {
+        context.fillRect(point.x() - 5, point.y() - 5, 10, 10);
     };
 
-    point2d = function (x, y) {
-        var that = {};
-
-        that.x = function () { return x; };
-        that.y = function () { return y; };
-
-        that.plus = function (addend) {
-            return point2d(x + addend.x(), y + addend.y());
-        };
-
-        that.toString = function () {
-            return "(" + x + ", " + y + ")";
-        };
-
-        that.equals = function (object) {
-            return object &&
-                typeof object.x === 'function' &&
-                typeof object.y === 'function' &&
-                x === object.x() && y === object.y();
-        };
-
-        return that;
+    that.drawMarkers = function (points) {
+        points.map(this.drawMarker, this);
     };
 
-    projection = function (canvasWidth, canvasHeight) {
-        return function (mapCoords) {
-            var canvasCenter,
-                displacement,
-                transformX,
-                transformY;
+    return that;
+};
 
-            transformX = mapCoords.decLongitude() * canvasWidth / 360;
-            transformY = -mapCoords.decLatitude() * canvasHeight / 180;
-            displacement = point2d(transformX, transformY);
+exports.point2d = function (x, y) {
+    var that = {};
 
-            canvasCenter = point2d(canvasWidth / 2, canvasHeight / 2);
+    that.x = function () { return x; };
+    that.y = function () { return y; };
 
-            return canvasCenter.plus(displacement);
-        };
+    that.plus = function (addend) {
+        return exports.point2d(x + addend.x(), y + addend.y());
     };
 
-    draw = function (canvas) {
-        var renderer, proj, coords, points;
-        renderer = createRenderer(canvas.getContext('2d'));
-        proj = projection(canvas.width, canvas.height);
-        coords = maps.healpix.basePixelVertices();
-        points = coords.map(proj);
-        renderer.drawMarkers(points);
+    that.toString = function () {
+        return "(" + x + ", " + y + ")";
     };
 
-    return {
-        createRenderer: createRenderer,
-        point2d: point2d,
-        projection: projection,
-        draw: draw
+    that.equals = function (object) {
+        return object &&
+            typeof object.x === "function" &&
+            typeof object.y === "function" &&
+            x === object.x() && y === object.y();
     };
-}());
+
+    return that;
+};
+
+exports.projection = function (canvasWidth, canvasHeight) {
+    return function (mapCoords) {
+        var canvasCenter,
+        displacement,
+        transformX,
+        transformY;
+
+        transformX = mapCoords.decLongitude() * canvasWidth / 360;
+        transformY = -mapCoords.decLatitude() * canvasHeight / 180;
+        displacement = exports.point2d(transformX, transformY);
+
+        canvasCenter = exports.point2d(canvasWidth / 2, canvasHeight / 2);
+
+        return canvasCenter.plus(displacement);
+    };
+};
+
+exports.draw = function (canvas) {
+    var renderer, proj, coords, points;
+    renderer = exports.createRenderer(canvas.getContext("2d"));
+    proj = exports.projection(canvas.width, canvas.height);
+    coords = maps.healpix.basePixelVertices();
+    points = coords.map(proj);
+    renderer.drawMarkers(points);
+};

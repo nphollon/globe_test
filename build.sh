@@ -9,15 +9,15 @@ assert() {
 }
 
 echo "Validating..."
-assert "jslint scripts/maps.js scripts/cartographer.js scripts/main.js"
+assert "jshint scripts"
 
 echo "Testing..."
-assert "phantomjs run-jasmine.js spec_runner.html"
+assert "jasmine-node spec"
+
+echo "Collating..."
+assert "browserify scripts/main.js -o scripts-gen/bundle.js"
 
 echo "Minifying..."
-assert "java -jar compiler.jar --js scripts/maps.js --js scripts/cartographer.js --js scripts/main.js --js_output_file scripts/min.js"
-
-echo "Testing minified JS..."
-assert "phantomjs run-jasmine.js min_spec_runner.html"
+assert "ccjs scripts-gen/bundle.js > scripts-gen/min.js"
 
 echo "Build successful!"
