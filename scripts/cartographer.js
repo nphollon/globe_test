@@ -60,10 +60,9 @@ exports.projection = function (canvasWidth, canvasHeight) {
 };
 
 exports.draw = function (canvas) {
-    var renderer, proj, coords, points;
-    renderer = exports.createRenderer(canvas.getContext("2d"));
-    proj = exports.projection(canvas.width, canvas.height);
-    coords = maps.healpix.basePixelVertices();
-    points = coords.map(proj);
+    var renderer = exports.createRenderer(canvas.getContext("2d"));
+    var proj = exports.projection(canvas.width, canvas.height);
+    var coords = maps.healpix.basePixelVertices();
+    var points = coords.map(proj);
     renderer.drawMarkers(points);
 };

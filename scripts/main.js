@@ -2,9 +2,8 @@
 
 window.onload = function () {
     "use strict";
-    var cartographer = require("./cartographer.js");
-    var canvasElement = document.getElementById("canvas");
-    if (canvasElement) {
-        cartographer.draw(canvasElement);
+    var canvas = document.getElementById("canvas");
+    if (canvas) {
+        require("./cartographer.js").draw(canvas);
     }
 };
