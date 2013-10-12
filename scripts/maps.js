@@ -1,63 +1,12 @@
-/* global exports*/
+/* global exports */
 
 "use strict";
 
 var limitedAngle,
-    minutesPerDegree = 60,
-    secondsPerMinute = 60;
+    secondsPerDegree = 3600;
 
 exports.angleFromDegrees = function (degrees) {
-    var totalSeconds = degrees * minutesPerDegree * secondsPerMinute;
-    return exports.angleFromSeconds(totalSeconds);
-};
-
-exports.angleFromDMS = function (degrees, minutes, seconds) {
-    var argumentError,
-    overflowCondition, // true if minutes or seconds >= 60
-    signCondition, // true if multiple negative arguments
-    sign,
-    absDegrees,
-    absMinutes,
-    absSeconds,
-    totalSeconds;
-
-    argumentError = function (message) {
-        return { name: "ArgumentError", message: message };
-    };
-
-    signCondition = function () {
-        if (degrees !== 0) {
-            return minutes < 0 || seconds < 0;
-        }
-        if (minutes !== 0) {
-            return seconds < 0;
-        }
-        return false;
-    };
-
-    overflowCondition = function () {
-        return minutes >= minutesPerDegree ||
-            seconds >= secondsPerMinute;
-    };
-
-    if (signCondition()) {
-        throw argumentError("only the most significant component " +
-                            "of an angle may be negative");
-    }
-
-    if (overflowCondition()) {
-        throw argumentError("minutes and seconds must be less than 60");
-    }
-
-    sign = (degrees < 0 || minutes < 0 || seconds < 0) ? -1 : 1;
-    absDegrees = Math.abs(degrees);
-    absMinutes = Math.abs(minutes) || 0;
-    absSeconds = Math.abs(seconds) || 0;
-    totalSeconds = sign *
-        (absDegrees * minutesPerDegree * secondsPerMinute +
-         absMinutes * secondsPerMinute +
-         absSeconds);
-
+    var totalSeconds = degrees * secondsPerDegree;
     return exports.angleFromSeconds(totalSeconds);
 };
 
@@ -65,34 +14,11 @@ exports.angleFromSeconds = function (seconds) {
     var intSeconds = Math.round(seconds),
     that = {};
 
-    that.toDegreesMinutesSeconds = function () {
-        var integerDivide, minuteSplit, degreeSplit;
-
-        integerDivide = function (dividend, divisor) {
-            var result = {};
-            result.remainder = dividend % divisor;
-            result.quotient = (dividend - result.remainder) / divisor;
-            if (result.quotient !== 0) {
-                result.remainder = Math.abs(result.remainder);
-            }
-            return result;
-        };
-
-        minuteSplit = integerDivide(intSeconds, secondsPerMinute);
-        degreeSplit = integerDivide(minuteSplit.quotient, minutesPerDegree);
-
-        return {
-            degrees: degreeSplit.quotient,
-            minutes: degreeSplit.remainder,
-            seconds: minuteSplit.remainder
-        };
+    that.asDegrees = function () {
+        return intSeconds / secondsPerDegree;
     };
 
-    that.toDecimalDegrees = function () {
-        return intSeconds / (secondsPerMinute * minutesPerDegree);
-    };
-
-    that.toSeconds = function () {
+    that.asSeconds = function () {
         return intSeconds;
     };
 
@@ -102,18 +28,14 @@ exports.angleFromSeconds = function (seconds) {
 
     that.equals = function (object) {
         try {
-            return intSeconds === object.toSeconds();
+            return intSeconds === object.asSeconds();
         } catch (objectNotAnAngle) {
             return false;
         }
     };
 
     that.toString = function () {
-        var dmsForm = that.toDegreesMinutesSeconds();
-        return "{ degrees: "  + dmsForm.degrees +
-            ", minutes: " + dmsForm.minutes +
-            ", seconds: " + dmsForm.seconds +
-            " }";
+        return intSeconds + " seconds";
     };
 
     return that;
@@ -123,10 +45,10 @@ limitedAngle = function (absLimit, name) {
     var message = (name || "angle") +
         " cannot exceed +/-" + absLimit + " degrees";
 
-    return function (degrees, minutes, seconds) {
-        var that =  exports.angleFromDMS(degrees, minutes, seconds);
+    return function (degrees) {
+        var that =  exports.angleFromDegrees(degrees);
 
-        if (Math.abs(that.toDecimalDegrees()) > absLimit) {
+        if (Math.abs(that.asDegrees()) > absLimit) {
             throw {
                 name: "ArgumentError",
                 message: message
@@ -139,7 +61,16 @@ limitedAngle = function (absLimit, name) {
 
 exports.latitude = limitedAngle(90, "latitude");
 
-exports.longitude = limitedAngle(180, "longitude");
+exports.longitude = function (degrees, minutes, seconds) {
+    var that = limitedAngle(180, "longitude")(degrees, minutes, seconds);
+    var superEquals = that.equals;
+
+    that.equals = function (object) {
+        return superEquals(object) ||
+            this.asSeconds() === object.asSeconds() + 360*60*60;
+    };
+    return that;
+};
 
 exports.coordinates = function (latDecimal, lonDecimal) {
     var latAngle, // latitude angle object
@@ -155,7 +86,7 @@ exports.coordinates = function (latDecimal, lonDecimal) {
     };
 
     that.decLatitude = function () {
-        return latAngle.toDecimalDegrees();
+        return latAngle.asDegrees();
     };
 
     that.longitude = function () {
@@ -163,26 +94,22 @@ exports.coordinates = function (latDecimal, lonDecimal) {
     };
 
     that.decLongitude = function () {
-        return lonAngle.toDecimalDegrees();
+        return lonAngle.asDegrees();
     };
 
     that.equals = function (object) {
-        var isAtSamePole, // true if latitudes are at north or south pole
-        isCoordinates, // true if object is comparable to coordinates
-        hasEqualComponents; // true if latitudes and longitudes are eq
-
-        isCoordinates = function () {
+        var isCoordinates = function () {
             return object &&
                 typeof object.latitude === "function" &&
                 typeof object.longitude === "function";
         };
 
-        hasEqualComponents = function () {
+        var hasEqualComponents = function () {
             return latAngle.equals(object.latitude()) &&
                 lonAngle.equals(object.longitude());
         };
 
-        isAtSamePole = function () {
+        var isAtSamePole = function () {
             var northPole = exports.angleFromDegrees(90);
             var southPole = northPole.negative();
             return (latAngle.equals(northPole) &&
