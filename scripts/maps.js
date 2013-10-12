@@ -5,37 +5,50 @@
 var limitedAngle,
     secondsPerDegree = 3600;
 
+var Angle = function () {
+    this.seconds = 0;
+};
+
+Angle.prototype.asDegrees = function () {
+    return this.seconds / secondsPerDegree;
+};
+
+Angle.prototype.asSeconds = function () {
+    return this.seconds;
+};
+
+Angle.prototype.negative = function () {
+    return exports.angleFromSeconds(-this.seconds);
+};
+
+Angle.prototype.equals = function (object) {
+    try {
+        return this.asSeconds() === object.asSeconds();
+    } catch (objectNotAnAngle) {
+        return false;
+    }
+};
+
+Angle.prototype.toString = function () {
+    return this.seconds + " seconds";
+};
+
 exports.angleFromDegrees = function (degrees) {
     var totalSeconds = degrees * secondsPerDegree;
     return exports.angleFromSeconds(totalSeconds);
 };
 
 exports.angleFromSeconds = function (seconds) {
-    var intSeconds = Math.round(seconds),
-    that = {};
+    var that = Object.create(Angle.prototype);
 
-    that.asDegrees = function () {
-        return intSeconds / secondsPerDegree;
-    };
-
-    that.asSeconds = function () {
-        return intSeconds;
-    };
-
-    that.negative = function () {
-        return exports.angleFromSeconds(-intSeconds);
-    };
+    that.seconds = Math.round(seconds);
 
     that.equals = function (object) {
         try {
-            return intSeconds === object.asSeconds();
+            return that.asSeconds() === object.asSeconds();
         } catch (objectNotAnAngle) {
             return false;
         }
-    };
-
-    that.toString = function () {
-        return intSeconds + " seconds";
     };
 
     return that;
@@ -46,23 +59,21 @@ limitedAngle = function (absLimit, name) {
         " cannot exceed +/-" + absLimit + " degrees";
 
     return function (degrees) {
-        var that =  exports.angleFromDegrees(degrees);
-
-        if (Math.abs(that.asDegrees()) > absLimit) {
+        if (Math.abs(degrees) > absLimit) {
             throw {
                 name: "ArgumentError",
                 message: message
             };
         }
 
-        return that;
+        return exports.angleFromDegrees(degrees);
     };
 };
 
 exports.latitude = limitedAngle(90, "latitude");
 
-exports.longitude = function (degrees, minutes, seconds) {
-    var that = limitedAngle(180, "longitude")(degrees, minutes, seconds);
+exports.longitude = function (degrees) {
+    var that = limitedAngle(180, "longitude")(degrees);
     var superEquals = that.equals;
 
     that.equals = function (object) {
@@ -98,12 +109,6 @@ exports.coordinates = function (latDecimal, lonDecimal) {
     };
 
     that.equals = function (object) {
-        var isCoordinates = function () {
-            return object &&
-                typeof object.latitude === "function" &&
-                typeof object.longitude === "function";
-        };
-
         var hasEqualComponents = function () {
             return latAngle.equals(object.latitude()) &&
                 lonAngle.equals(object.longitude());
@@ -118,7 +123,11 @@ exports.coordinates = function (latDecimal, lonDecimal) {
                  object.latitude().equals(southPole));
         };
 
-        return isCoordinates() && (isAtSamePole() || hasEqualComponents());
+        try {
+            return isAtSamePole() || hasEqualComponents();
+        } catch (objectNotCoordinates) {
+            return false;
+        }
     };
 
     return that;
