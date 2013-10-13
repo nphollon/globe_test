@@ -1,19 +1,21 @@
 "use strict";
 
 var healpix = require("./healpix.js")
+var objects = require("./objects.js")
 
-exports.createRenderer = function (context) {
-    var that = {}
-
-    that.drawMarker = function (point) {
-        context.fillRect(point.x() - 5, point.y() - 5, 10, 10)
+var Renderer = function (context) {
+    if (!(this instanceof Renderer)) {
+        return new Renderer(context);
     }
+    objects.defineConstant(this, "context", context)
+}
 
-    that.drawMarkers = function (points) {
-        points.map(this.drawMarker, this)
-    }
+Renderer.prototype.drawMarker = function (point) {
+    this.context.fillRect(point.x() - 5, point.y() - 5, 10, 10)
+}
 
-    return that
+Renderer.prototype.drawMarkers = function (points) {
+    points.map(this.drawMarker, this)
 }
 
 exports.point2d = function (x, y) {
@@ -58,9 +60,11 @@ exports.projection = function (canvasWidth, canvasHeight) {
 }
 
 exports.draw = function (canvas) {
-    var renderer = exports.createRenderer(canvas.getContext("2d"))
+    var renderer = new Renderer(canvas.getContext("2d"))
     var proj = exports.projection(canvas.width, canvas.height)
     var coords = healpix.basePixelVertices()
     var points = coords.map(proj)
     renderer.drawMarkers(points)
 }
+
+exports.Renderer = Renderer

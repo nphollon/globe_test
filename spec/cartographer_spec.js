@@ -6,7 +6,8 @@ describe("Cartographer", function () {
 
     var createRenderer, point2d, projection
 
-    createRenderer = cartographer.createRenderer
+    var Renderer = cartographer.Renderer
+
     point2d = cartographer.point2d
     projection = cartographer.projection
 
@@ -15,7 +16,7 @@ describe("Cartographer", function () {
 
         beforeEach(function () {
             context = jasmine.createSpyObj('context', ['fillRect'])
-            renderer = createRenderer(context)
+            renderer = new Renderer(context)
             pt = point2d(3, 5)
         })
 
