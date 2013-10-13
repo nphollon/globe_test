@@ -9,7 +9,7 @@
     "latedef": true,
     "maxlen": 80,
     "maxparams": 4,
-    "maxcomplexity": 11,
+    "maxcomplexity": 3,
     "maxdepth": 2,
     "newcap": true,
     "noarg": true,
