@@ -3,15 +3,11 @@ var maps = require("../scripts/maps.js");
 describe("Maps", function () {
     "use strict";
 
-    var angleFromDegrees, angleFromDMS, angleFromSeconds,
-        latitude, longitude, coordinates, healpix;
-
-    angleFromDegrees = maps.angleFromDegrees;
-    angleFromSeconds = maps.angleFromSeconds;
-    latitude = maps.latitude;
-    longitude = maps.longitude;
-    coordinates = maps.coordinates;
-    healpix = maps.healpix;
+    var Angle = maps.Angle;
+    var latitude = maps.latitude;
+    var longitude = maps.longitude;
+    var coordinates = maps.coordinates;
+    var healpix = maps.healpix;
 
     describe("Angle", function () {
         beforeEach(function () {
@@ -35,13 +31,13 @@ describe("Maps", function () {
             var testAngle;
 
             beforeEach(function () {
-                testAngle = angleFromSeconds(3600);
+                testAngle = new Angle(1);
             });
 
             it("should compare two angles", function () {
-                expect(testAngle).toEqualAngle(angleFromSeconds(3600));
-                expect(testAngle).toEqualAngle(angleFromDegrees(1));
-                expect(testAngle).not.toEqualAngle(angleFromSeconds(0));
+                expect(testAngle).toEqualAngle(Angle.fromSeconds(3600));
+                expect(testAngle).toEqualAngle(new Angle(1));
+                expect(testAngle).not.toEqualAngle(new Angle(0));
             });
 
             it("should not be equal to undefined", function () {
@@ -61,34 +57,34 @@ describe("Maps", function () {
 
         describe("degrees", function () {
             it("should return angle in degrees", function () {
-                expect(angleFromSeconds(3600).degrees).toEqual(1);
-                expect(angleFromDegrees(1).degrees).toEqual(1);
+                expect(new Angle(1).degrees).toEqual(1);
+                expect(Angle.fromSeconds(3600).degrees).toEqual(1);
             });
 
             it("should be immutable", function () {
                 expect(function () {
-                    angleFromDegrees(1).degrees = 10;
+                    new Angle(1).degrees = 10;
                 }).toThrow();
             });
         });
 
         describe("seconds", function () {
             it("should return angle in seconds", function () {
-                expect(angleFromSeconds(1).seconds).toEqual(1);
-                expect(angleFromDegrees(1).seconds).toEqual(3600);
+                expect(Angle.fromSeconds(1).seconds).toEqual(1);
+                expect(new Angle(1).seconds).toEqual(3600);
             });
 
             it("should be immutable", function () {
                 expect(function () {
-                    angleFromDegrees(1).seconds = 1;
+                    new Angle(1).seconds = 1;
                 }).toThrow();
             });
         });
 
         describe("negative()", function () {
             it("should return the negatiion of the angle", function () {
-                var angle = angleFromSeconds(1);
-                var negAngle = angleFromSeconds(-1);
+                var angle = new Angle(1);
+                var negAngle = new Angle(-1);
                 expect(angle.negative()).toEqualAngle(negAngle);
                 expect(negAngle.negative()).toEqualAngle(angle);
             });
@@ -96,8 +92,8 @@ describe("Maps", function () {
 
         describe("toString()", function () {
             it("should return the angle in seconds", function () {
-                var testAngle = angleFromSeconds(100);
-                expect(testAngle.toString()).toEqual('100 seconds');
+                var testAngle = new Angle(1);
+                expect(testAngle.toString()).toEqual('3600 seconds');
             });
         });
     });
@@ -105,7 +101,7 @@ describe("Maps", function () {
     describe("Latitude", function () {
         it("should be an angle", function () {
             var latitudeObject = latitude(1),
-                angleObject = angleFromDegrees(1);
+                angleObject = new Angle(1);
 
             expect(angleObject.equals(latitudeObject)).toBeTruthy();
         });
@@ -120,7 +116,7 @@ describe("Maps", function () {
     describe("Longitude", function () {
         it("should be an angle", function () {
             var longitudeObject = longitude(1),
-                angleObject = angleFromDegrees(1);
+                angleObject = new Angle(1);
 
             expect(angleObject.equals(longitudeObject)).toBeTruthy();
         });
@@ -143,8 +139,8 @@ describe("Maps", function () {
     describe("Coordinates", function () {
         it("should have a latitude and longitude", function () {
             var coord = coordinates(1.5, 2.7);
-            expect(angleFromDegrees(1.5).equals(coord.latitude())).toBeTruthy();
-            expect(angleFromDegrees(2.7).equals(coord.longitude())).toBeTruthy();
+            expect(new Angle(1.5).equals(coord.latitude())).toBeTruthy();
+            expect(new Angle(2.7).equals(coord.longitude())).toBeTruthy();
         });
 
         describe("equals()", function () {
@@ -173,7 +169,7 @@ describe("Maps", function () {
             it("should be unequal to things that aren't coordinates", function () {
                 expect(coord.equals(null)).toBeFalsy();
                 expect(coord.equals(undefined)).toBeFalsy();
-                expect(coord.equals(angleFromDegrees(0))).toBeFalsy();
+                expect(coord.equals(new Angle(0))).toBeFalsy();
             });
         });
     });

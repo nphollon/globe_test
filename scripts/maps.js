@@ -2,18 +2,26 @@
 
 var objects = require("./objects.js");
 
-var Angle = function (seconds) {
+var Angle = function (degrees) {
+    if (!(this instanceof Angle)) {
+        return new Angle(degrees);
+    }
+    var seconds = degrees * Angle.secondsPerDegree;
     objects.defineConstant(this, "seconds", seconds);
 };
 
 objects.defineConstant(Angle, "secondsPerDegree", 3600);
+
+Angle.fromSeconds = function (seconds) {
+    return new Angle(seconds / Angle.secondsPerDegree);
+};
 
 objects.defineAccessor(Angle.prototype, "degrees", function () {
     return this.seconds / Angle.secondsPerDegree;
 });
 
 Angle.prototype.negative = function () {
-    return new Angle(-this.seconds);
+    return Angle.fromSeconds(-this.seconds);
 };
 
 Angle.prototype.equals = function (object) {
@@ -28,13 +36,7 @@ Angle.prototype.toString = function () {
     return this.seconds + " seconds";
 };
 
-exports.angleFromDegrees = function (degrees) {
-    return new Angle(degrees * Angle.secondsPerDegree);
-};
-
-exports.angleFromSeconds = function (seconds) {
-    return new Angle(seconds);
-};
+exports.Angle = Angle;
 
 var limitedAngle = function (absLimit, name) {
     var message = (name || "angle") +
@@ -48,7 +50,7 @@ var limitedAngle = function (absLimit, name) {
             };
         }
 
-        return exports.angleFromDegrees(degrees);
+        return new Angle(degrees);
     };
 };
 
@@ -58,8 +60,8 @@ exports.longitude = function (degrees) {
     var that = limitedAngle(180, "longitude")(degrees);
 
     that.equals = function (object) {
-        return exports.angleFromDegrees(degrees).equals(object) ||
-            exports.angleFromDegrees(degrees-360).equals(object);
+        return new Angle(degrees).equals(object) ||
+            new Angle(degrees-360).equals(object);
     };
     return that;
 };
@@ -96,7 +98,7 @@ exports.coordinates = function (latDecimal, lonDecimal) {
         };
 
         var isAtSamePole = function () {
-            var northPole = exports.angleFromDegrees(90);
+            var northPole = new Angle(90);
             var southPole = northPole.negative();
             return (latAngle.equals(northPole) &&
                     object.latitude().equals(northPole)) ||
