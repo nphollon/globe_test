@@ -18,6 +18,6 @@ echo "Collating..."
 assert "browserify scripts/main.js -o scripts-gen/bundle.js"
 
 echo "Minifying..."
-assert "ccjs scripts-gen/bundle.js --compilation_level=ADVANCED_OPTIMIZATIONS > scripts-gen/min.js"
+assert "ccjs scripts-gen/bundle.js > scripts-gen/min.js"
 
 echo "Build successful!"
