@@ -4,29 +4,12 @@ describe("Maps", function () {
     "use strict";
 
     var Angle = maps.Angle;
-    var latitude = maps.latitude;
-    var longitude = maps.longitude;
-    var coordinates = maps.coordinates;
+    var Latitude = maps.Latitude;
+    var Longitude = maps.Longitude;
+    var Coordinates = maps.Coordinates;
     var healpix = maps.healpix;
 
     describe("Angle", function () {
-        beforeEach(function () {
-            this.addMatchers({
-
-                toEqualAngle: function (expected) {
-                    var actual = this.actual,
-                        notText = this.isNot ? "false" : "true";
-
-                    this.message = function () {
-                        return "Expected " + actual + ".equals("
-                            + expected + ") to be " + notText;
-                    };
-
-                    return actual.equals(expected);
-                }
-            });
-        });
-
         describe("equals()", function () {
             var testAngle;
 
@@ -45,9 +28,7 @@ describe("Maps", function () {
             });
 
             it("should not be equal to non-Angle objects", function () {
-                var emptyObject, emptyDmsObject;
-                emptyObject = {};
-                expect(testAngle).not.toEqualObject(emptyObject);
+                expect(testAngle).not.toEqualObject({});
             });
 
             it("should not be equal to null", function () {
@@ -100,70 +81,66 @@ describe("Maps", function () {
 
     describe("Latitude", function () {
         it("should be an angle", function () {
-            var latitudeObject = latitude(1),
+            var latitude = new Latitude(1),
                 angleObject = new Angle(1);
 
-            expect(angleObject).toEqualObject(latitudeObject);
+            expect(angleObject).toEqualObject(latitude);
         });
 
         it("should be bounded at +/-90 degrees", function () {
-            var error = { message: 'latitude cannot exceed +/-90 degrees' };
-            expect(function () { latitude(90.1); }).toThrow(error);
-            expect(function () { latitude(-90.1); }).toThrow(error);
+            expect(function () { new Latitude(90.1); }).toThrow();
+            expect(function () { new Latitude(-90.1); }).toThrow();
         });
     });
 
     describe("Longitude", function () {
         it("should be an angle", function () {
-            var longitudeObject = longitude(1),
+            var longitude = new Longitude(1),
                 angleObject = new Angle(1);
 
-            expect(angleObject).toEqualObject(longitudeObject);
+            expect(angleObject).toEqualObject(longitude);
         });
 
         it("should be bounded at +/-180 degrees", function () {
-            var error = { message: 'longitude cannot exceed +/-180 degrees' };
-            expect(function () { longitude(180.1); }).toThrow(error);
-            expect(function () { longitude(-180.1); }).toThrow(error);
+            expect(function () { new Longitude(180.1); }).toThrow();
+            expect(function () { new Longitude(-180.1); }).toThrow();
         });
 
         xit("should be equal to longitudes off by 360 deg", function () {
-            var farEast = longitude(180);
-            var farWest = longitude(-180);
-            expect(farEast).toBeEqual(farWest);
+            var farEast = new Longitude(180);
+            var farWest = new Longitude(-180);
+            expect(farEast).toEqualObject(farWest);
         });
-
-
     });
 
     describe("Coordinates", function () {
         it("should have a latitude and longitude", function () {
-            var coord = coordinates(1.5, 2.7);
-            expect(new Angle(1.5)).toEqualObject(coord.latitude());
-            expect(new Angle(2.7)).toEqualObject(coord.longitude());
+            var coord = new Coordinates(1.5, 2.7);
+            expect(new Angle(1.5)).toEqualObject(coord.latitude);
+            expect(new Angle(2.7)).toEqualObject(coord.longitude);
         });
 
         describe("equals()", function () {
             var coord;
 
             beforeEach(function () {
-                coord = coordinates(0, 0);
+                coord = new Coordinates(0, 0);
             });
 
             it("should equal another coordinates with same lat & long", function () {
-                expect(coord).toEqualObject(coordinates(0, 0));
+                expect(coord).toEqualObject(new Coordinates(0, 0));
             });
 
             it("should be unequal to coordinates with different lat | long", function () {
-                expect(coord).not.toEqualObject(coordinates(1, 0));
-                expect(coord).not.toEqualObject(coordinates(0, 1));
+                expect(coord).not.toEqualObject(new Coordinates(1, 0));
+                expect(coord).not.toEqualObject(new Coordinates(0, 1));
             });
 
             it("should be equal if both coordinates are at the same pole", function () {
-                var northPole = coordinates(90, 0),
-                    southPole = coordinates(-90, 0);
-                expect(northPole).toEqualObject(coordinates(90, 100));
-                expect(southPole).toEqualObject(coordinates(-90, 100));
+                var northPole = new Coordinates(90, 0),
+                    southPole = new Coordinates(-90, 0);
+                expect(northPole).toEqualObject(new Coordinates(90, 100));
+                expect(southPole).toEqualObject(new Coordinates(-90, 100));
             });
 
             it("should be unequal to things that aren't coordinates", function () {
@@ -180,20 +157,20 @@ describe("Maps", function () {
                 var expectedCoords, actualCoords, i;
 
                 expectedCoords = [
-                    coordinates(90, 0),
-                    coordinates(45, -135),
-                    coordinates(45, -45),
-                    coordinates(45, 45),
-                    coordinates(45, 135),
-                    coordinates(0, -90),
-                    coordinates(0, 0),
-                    coordinates(0, 90),
-                    coordinates(0, 180),
-                    coordinates(-45, -135),
-                    coordinates(-45, -45),
-                    coordinates(-45, 45),
-                    coordinates(-45, 135),
-                    coordinates(-90, 0)
+                    new Coordinates(90, 0),
+                    new Coordinates(45, -135),
+                    new Coordinates(45, -45),
+                    new Coordinates(45, 45),
+                    new Coordinates(45, 135),
+                    new Coordinates(0, -90),
+                    new Coordinates(0, 0),
+                    new Coordinates(0, 90),
+                    new Coordinates(0, 180),
+                    new Coordinates(-45, -135),
+                    new Coordinates(-45, -45),
+                    new Coordinates(-45, 45),
+                    new Coordinates(-45, 135),
+                    new Coordinates(-90, 0)
                 ];
 
                 actualCoords = healpix.basePixelVertices();

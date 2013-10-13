@@ -79,7 +79,7 @@ describe("Cartographer", function () {
         var plateCaree, verifyProjection;
 
         verifyProjection = function (mapXY, canvasXY) {
-            var canvasCoords = plateCaree(maps.coordinates(mapXY[0], mapXY[1]));
+            var canvasCoords = plateCaree(new maps.Coordinates(mapXY[0], mapXY[1]));
             expect(canvasCoords.x()).toEqual(canvasXY[0]);
             expect(canvasCoords.y()).toEqual(canvasXY[1]);
         };

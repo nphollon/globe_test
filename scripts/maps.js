@@ -36,84 +36,60 @@ Angle.prototype.toString = function () {
     return this.seconds + " seconds";
 };
 
-exports.Angle = Angle;
 
-var limitedAngle = function (absLimit, name) {
-    var message = (name || "angle") +
-        " cannot exceed +/-" + absLimit + " degrees";
-
-    return function (degrees) {
-        if (Math.abs(degrees) > absLimit) {
-            throw {
-                name: "ArgumentError",
-                message: message
-            };
-        }
-
-        return new Angle(degrees);
-    };
+var checkAngleLimit = function (degrees, limit, name) {
+    if (Math.abs(degrees) > limit) {
+        throw {
+            name: "ArgumentError",
+            message: name + " cannot exceed +/- " + limit + " degrees"
+        };
+    }
 };
 
-exports.latitude = limitedAngle(90, "latitude");
-
-exports.longitude = function (degrees) {
-    var that = limitedAngle(180, "longitude")(degrees);
-
-    that.equals = function (object) {
-        return new Angle(degrees).equals(object) ||
-            new Angle(degrees-360).equals(object);
-    };
-    return that;
+var Latitude = function (degrees) {
+    checkAngleLimit(degrees, 90, "Latitude");
+    return new Angle(degrees);
 };
 
-exports.coordinates = function (latDecimal, lonDecimal) {
-    var latAngle, // latitude angle object
-    lonAngle, // longitude angle object
-    that; // return value; contains public methods
+var Longitude = function (degrees) {
+    checkAngleLimit(degrees, 180, "Longitude");
+    return new Angle(degrees);
+};
 
-    that = {};
-    latAngle = exports.latitude(latDecimal);
-    lonAngle = exports.longitude(lonDecimal);
+var Coordinates = function (latDegrees, lonDegrees) {
+    if (!(this instanceof Coordinates)) {
+        return new Coordinates(latDegrees, lonDegrees);
+    }
+    objects.defineConstant(this, "latitude", new Latitude(latDegrees));
+    objects.defineConstant(this, "longitude", new Longitude(lonDegrees));
+};
 
-    that.latitude = function () {
-        return latAngle;
+Coordinates.prototype.toString = function () {
+    return "(" + this.latitude + ", " + this.longitude + ")";
+};
+
+Coordinates.prototype.equals = function (object) {
+    var that = this;
+
+    var hasEqualComponents = function () {
+        return that.latitude.equals(object.latitude) &&
+            that.longitude.equals(object.longitude);
     };
 
-    that.decLatitude = function () {
-        return latAngle.degrees;
+    var isAtSamePole = function () {
+        var northPole = new Angle(90);
+        var southPole = new Angle(-90);
+        return (that.latitude.equals(northPole) &&
+                object.latitude.equals(northPole)) ||
+            (that.latitude.equals(southPole) &&
+             object.latitude.equals(southPole));
     };
 
-    that.longitude = function () {
-        return lonAngle;
-    };
-
-    that.decLongitude = function () {
-        return lonAngle.degrees;
-    };
-
-    that.equals = function (object) {
-        var hasEqualComponents = function () {
-            return latAngle.equals(object.latitude()) &&
-                lonAngle.equals(object.longitude());
-        };
-
-        var isAtSamePole = function () {
-            var northPole = new Angle(90);
-            var southPole = northPole.negative();
-            return (latAngle.equals(northPole) &&
-                    object.latitude().equals(northPole)) ||
-                (latAngle.equals(southPole) &&
-                 object.latitude().equals(southPole));
-        };
-
-        try {
-            return isAtSamePole() || hasEqualComponents();
-        } catch (objectNotCoordinates) {
-            return false;
-        }
-    };
-
-    return that;
+    try {
+        return isAtSamePole() || hasEqualComponents();
+    } catch (objectNotCoordinates) {
+        return false;
+    }
 };
 
 exports.healpix = {};
@@ -133,8 +109,13 @@ exports.healpix.basePixelVertices = function () {
         for (vertexLon = initLongitudes[i];
              vertexLon <= 180;
              vertexLon += 90) {
-            vertices.push(exports.coordinates(vertexLat, vertexLon));
+            vertices.push(new Coordinates(vertexLat, vertexLon));
         }
     }
     return vertices;
 };
+
+exports.Angle = Angle;
+exports.Latitude = Latitude;
+exports.Longitude = Longitude;
+exports.Coordinates = Coordinates;

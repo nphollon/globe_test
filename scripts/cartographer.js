@@ -47,8 +47,8 @@ exports.projection = function (canvasWidth, canvasHeight) {
         transformX,
         transformY;
 
-        transformX = mapCoords.decLongitude() * canvasWidth / 360;
-        transformY = -mapCoords.decLatitude() * canvasHeight / 180;
+        transformX = mapCoords.longitude.degrees * canvasWidth / 360;
+        transformY = -mapCoords.latitude.degrees * canvasHeight / 180;
         displacement = exports.point2d(transformX, transformY);
 
         canvasCenter = exports.point2d(canvasWidth / 2, canvasHeight / 2);
