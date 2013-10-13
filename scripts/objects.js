@@ -6,8 +6,8 @@ exports.defineConstant = function (object, name, value) {
         writeable: false,
         enumerable: false,
         configurable: false
-    });
-};
+    })
+}
 
 exports.defineAccessor = function (object, name, getter) {
     Object.defineProperty(object, name, {
@@ -15,5 +15,5 @@ exports.defineAccessor = function (object, name, getter) {
         set: undefined,
         enumerable: false,
         configurable: false
-    });
-};
+    })
+}
