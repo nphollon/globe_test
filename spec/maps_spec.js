@@ -35,23 +35,23 @@ describe("Maps", function () {
             });
 
             it("should compare two angles", function () {
-                expect(testAngle).toEqualAngle(Angle.fromSeconds(3600));
-                expect(testAngle).toEqualAngle(new Angle(1));
-                expect(testAngle).not.toEqualAngle(new Angle(0));
+                expect(testAngle).toEqualObject(Angle.fromSeconds(3600));
+                expect(testAngle).toEqualObject(new Angle(1));
+                expect(testAngle).not.toEqualObject(new Angle(0));
             });
 
             it("should not be equal to undefined", function () {
-                expect(testAngle).not.toEqualAngle(undefined);
+                expect(testAngle).not.toEqualObject(undefined);
             });
 
             it("should not be equal to non-Angle objects", function () {
                 var emptyObject, emptyDmsObject;
                 emptyObject = {};
-                expect(testAngle).not.toEqualAngle(emptyObject);
+                expect(testAngle).not.toEqualObject(emptyObject);
             });
 
             it("should not be equal to null", function () {
-                expect(testAngle).not.toEqualAngle(null);
+                expect(testAngle).not.toEqualObject(null);
             });
         });
 
@@ -85,8 +85,8 @@ describe("Maps", function () {
             it("should return the negatiion of the angle", function () {
                 var angle = new Angle(1);
                 var negAngle = new Angle(-1);
-                expect(angle.negative()).toEqualAngle(negAngle);
-                expect(negAngle.negative()).toEqualAngle(angle);
+                expect(angle.negative()).toEqualObject(negAngle);
+                expect(negAngle.negative()).toEqualObject(angle);
             });
         });
 
@@ -103,7 +103,7 @@ describe("Maps", function () {
             var latitudeObject = latitude(1),
                 angleObject = new Angle(1);
 
-            expect(angleObject.equals(latitudeObject)).toBeTruthy();
+            expect(angleObject).toEqualObject(latitudeObject);
         });
 
         it("should be bounded at +/-90 degrees", function () {
@@ -118,7 +118,7 @@ describe("Maps", function () {
             var longitudeObject = longitude(1),
                 angleObject = new Angle(1);
 
-            expect(angleObject.equals(longitudeObject)).toBeTruthy();
+            expect(angleObject).toEqualObject(longitudeObject);
         });
 
         it("should be bounded at +/-180 degrees", function () {
@@ -130,7 +130,7 @@ describe("Maps", function () {
         xit("should be equal to longitudes off by 360 deg", function () {
             var farEast = longitude(180);
             var farWest = longitude(-180);
-            expect(farEast.equals(farWest)).toBeTruthy();
+            expect(farEast).toBeEqual(farWest);
         });
 
 
@@ -139,8 +139,8 @@ describe("Maps", function () {
     describe("Coordinates", function () {
         it("should have a latitude and longitude", function () {
             var coord = coordinates(1.5, 2.7);
-            expect(new Angle(1.5).equals(coord.latitude())).toBeTruthy();
-            expect(new Angle(2.7).equals(coord.longitude())).toBeTruthy();
+            expect(new Angle(1.5)).toEqualObject(coord.latitude());
+            expect(new Angle(2.7)).toEqualObject(coord.longitude());
         });
 
         describe("equals()", function () {
@@ -150,26 +150,26 @@ describe("Maps", function () {
                 coord = coordinates(0, 0);
             });
 
-            it("should be equal to another coordinates with equal lat & long", function () {
-                expect(coord.equals(coordinates(0, 0))).toBeTruthy();
+            it("should equal another coordinates with same lat & long", function () {
+                expect(coord).toEqualObject(coordinates(0, 0));
             });
 
             it("should be unequal to coordinates with different lat | long", function () {
-                expect(coord.equals(coordinates(1, 0))).toBeFalsy();
-                expect(coord.equals(coordinates(0, 1))).toBeFalsy();
+                expect(coord).not.toEqualObject(coordinates(1, 0));
+                expect(coord).not.toEqualObject(coordinates(0, 1));
             });
 
             it("should be equal if both coordinates are at the same pole", function () {
                 var northPole = coordinates(90, 0),
                     southPole = coordinates(-90, 0);
-                expect(northPole.equals(coordinates(90, 100))).toBeTruthy();
-                expect(southPole.equals(coordinates(-90, 100))).toBeTruthy();
+                expect(northPole).toEqualObject(coordinates(90, 100));
+                expect(southPole).toEqualObject(coordinates(-90, 100));
             });
 
             it("should be unequal to things that aren't coordinates", function () {
-                expect(coord.equals(null)).toBeFalsy();
-                expect(coord.equals(undefined)).toBeFalsy();
-                expect(coord.equals(new Angle(0))).toBeFalsy();
+                expect(coord).not.toEqualObject(null);
+                expect(coord).not.toEqualObject(undefined);
+                expect(coord).not.toEqualObject(new Angle(0));
             });
         });
     });
@@ -199,7 +199,7 @@ describe("Maps", function () {
                 actualCoords = healpix.basePixelVertices();
 
                 for (i = 0; i < expectedCoords.length; i += 1) {
-                    expect(expectedCoords[i].equals(actualCoords[i])).toBeTruthy();
+                    expect(expectedCoords[i]).toEqualObject(actualCoords[i]);
                 }
             });
         });

@@ -1,9 +1,15 @@
 beforeEach(function() {
-  this.addMatchers({
-    toBePlaying: function(expectedSong) {
-      var player = this.actual;
-      return player.currentlyPlayingSong === expectedSong && 
-             player.isPlaying;
-    }
-  });
+    this.addMatchers({
+        toEqualObject: function (expected) {
+            var actual = this.actual,
+            notText = this.isNot ? "false" : "true";
+
+            this.message = function () {
+                return "Expected " + actual + ".equals("
+                    + expected + ") to be " + notText;
+            };
+
+            return actual.equals(expected);
+        }
+    });
 });

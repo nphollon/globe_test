@@ -46,7 +46,7 @@ describe("Cartographer", function () {
                 var displacement, newPoint;
                 displacement = point2d(4, 7);
                 newPoint = testPoint.plus(displacement);
-                expect(newPoint.equals(point2d(5, 9))).toBeTruthy();
+                expect(newPoint).toEqualObject(point2d(5, 9));
             });
         });
 
@@ -58,19 +58,19 @@ describe("Cartographer", function () {
         
         describe("equals()", function () {
             it("should be true if x and y are equal", function () {
-                expect(testPoint.equals(point2d(1, 2))).toBeTruthy();
+                expect(testPoint).toEqualObject(point2d(1, 2));
             });
 
             it("should be false if x or y is not equal", function () {
-                expect(testPoint.equals(point2d(0, 2))).toBeFalsy();
-                expect(testPoint.equals(point2d(1, 0))).toBeFalsy();
+                expect(testPoint).not.toEqualObject(point2d(0, 2));
+                expect(testPoint).not.toEqualObject(point2d(1, 0));
             });
 
             it("should be false if operand is not a point", function () {
-                expect(testPoint.equals(undefined)).toBeFalsy();
-                expect(testPoint.equals(null)).toBeFalsy();
-                expect(testPoint.equals({})).toBeFalsy();
-                expect(testPoint.equals({ x: function () { return 1; } })).toBeFalsy();
+                expect(testPoint).not.toEqualObject(undefined);
+                expect(testPoint).not.toEqualObject(null);
+                expect(testPoint).not.toEqualObject({});
+                expect(testPoint).not.toEqualObject({ x: function () { return 1; } });
             });
         });
     });
