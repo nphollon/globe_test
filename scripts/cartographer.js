@@ -1,5 +1,3 @@
-/*global exports, require */
-
 "use strict";
 
 var maps = require("./maps.js");

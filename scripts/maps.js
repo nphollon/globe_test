@@ -1,29 +1,24 @@
-/* global exports */
-
 "use strict";
 
-var limitedAngle,
-    secondsPerDegree = 3600;
+var objects = require("./objects.js");
 
 var Angle = function (seconds) {
-    this.seconds = seconds;
+    objects.defineConstant(this, "seconds", seconds);
 };
 
-Angle.prototype.asDegrees = function () {
-    return this.seconds / secondsPerDegree;
-};
+objects.defineConstant(Angle, "secondsPerDegree", 3600);
 
-Angle.prototype.asSeconds = function () {
-    return this.seconds;
-};
+objects.defineAccessor(Angle.prototype, "degrees", function () {
+    return this.seconds / Angle.secondsPerDegree;
+});
 
 Angle.prototype.negative = function () {
-    return exports.angleFromSeconds(-this.seconds);
+    return new Angle(-this.seconds);
 };
 
 Angle.prototype.equals = function (object) {
     try {
-        return this.asSeconds() === object.asSeconds();
+        return this.seconds === object.seconds;
     } catch (objectNotAnAngle) {
         return false;
     }
@@ -34,14 +29,14 @@ Angle.prototype.toString = function () {
 };
 
 exports.angleFromDegrees = function (degrees) {
-    return new Angle(degrees * secondsPerDegree);
+    return new Angle(degrees * Angle.secondsPerDegree);
 };
 
 exports.angleFromSeconds = function (seconds) {
     return new Angle(seconds);
 };
 
-limitedAngle = function (absLimit, name) {
+var limitedAngle = function (absLimit, name) {
     var message = (name || "angle") +
         " cannot exceed +/-" + absLimit + " degrees";
 
@@ -83,7 +78,7 @@ exports.coordinates = function (latDecimal, lonDecimal) {
     };
 
     that.decLatitude = function () {
-        return latAngle.asDegrees();
+        return latAngle.degrees;
     };
 
     that.longitude = function () {
@@ -91,7 +86,7 @@ exports.coordinates = function (latDecimal, lonDecimal) {
     };
 
     that.decLongitude = function () {
-        return lonAngle.asDegrees();
+        return lonAngle.degrees;
     };
 
     that.equals = function (object) {

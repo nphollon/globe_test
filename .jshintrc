@@ -18,5 +18,7 @@
     "plusplus": true,
     "quotmark": "double",
     "undef": true,
-    "unused": true
+    "unused": true,
+
+    "node": true
 }

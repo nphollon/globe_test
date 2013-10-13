@@ -1,4 +1,4 @@
-/*global window, document, require */
+/* jshint browser: true */
 
 window.onload = function () {
     "use strict";

@@ -7,7 +7,6 @@ describe("Maps", function () {
         latitude, longitude, coordinates, healpix;
 
     angleFromDegrees = maps.angleFromDegrees;
-    angleFromDMS = maps.angleFromDMS;
     angleFromSeconds = maps.angleFromSeconds;
     latitude = maps.latitude;
     longitude = maps.longitude;
@@ -60,17 +59,29 @@ describe("Maps", function () {
             });
         });
 
-        describe("asDegrees()", function () {
+        describe("degrees", function () {
             it("should return angle in degrees", function () {
-                expect(angleFromSeconds(3600).asDegrees()).toEqual(1);
-                expect(angleFromDegrees(1).asDegrees()).toEqual(1);
+                expect(angleFromSeconds(3600).degrees).toEqual(1);
+                expect(angleFromDegrees(1).degrees).toEqual(1);
+            });
+
+            it("should be immutable", function () {
+                expect(function () {
+                    angleFromDegrees(1).degrees = 10;
+                }).toThrow();
             });
         });
 
-        describe("asSeconds()", function () {
+        describe("seconds", function () {
             it("should return angle in seconds", function () {
-                expect(angleFromSeconds(1).asSeconds()).toEqual(1);
-                expect(angleFromDegrees(1).asSeconds()).toEqual(3600);
+                expect(angleFromSeconds(1).seconds).toEqual(1);
+                expect(angleFromDegrees(1).seconds).toEqual(3600);
+            });
+
+            it("should be immutable", function () {
+                expect(function () {
+                    angleFromDegrees(1).seconds = 1;
+                }).toThrow();
             });
         });
 
