@@ -5,8 +5,8 @@
 var limitedAngle,
     secondsPerDegree = 3600;
 
-var Angle = function () {
-    this.seconds = 0;
+var Angle = function (seconds) {
+    this.seconds = seconds;
 };
 
 Angle.prototype.asDegrees = function () {
@@ -34,24 +34,11 @@ Angle.prototype.toString = function () {
 };
 
 exports.angleFromDegrees = function (degrees) {
-    var totalSeconds = degrees * secondsPerDegree;
-    return exports.angleFromSeconds(totalSeconds);
+    return new Angle(degrees * secondsPerDegree);
 };
 
 exports.angleFromSeconds = function (seconds) {
-    var that = Object.create(Angle.prototype);
-
-    that.seconds = Math.round(seconds);
-
-    that.equals = function (object) {
-        try {
-            return that.asSeconds() === object.asSeconds();
-        } catch (objectNotAnAngle) {
-            return false;
-        }
-    };
-
-    return that;
+    return new Angle(seconds);
 };
 
 limitedAngle = function (absLimit, name) {
@@ -74,11 +61,10 @@ exports.latitude = limitedAngle(90, "latitude");
 
 exports.longitude = function (degrees) {
     var that = limitedAngle(180, "longitude")(degrees);
-    var superEquals = that.equals;
 
     that.equals = function (object) {
-        return superEquals(object) ||
-            this.asSeconds() === object.asSeconds() + 360*60*60;
+        return exports.angleFromDegrees(degrees).equals(object) ||
+            exports.angleFromDegrees(degrees-360).equals(object);
     };
     return that;
 };
