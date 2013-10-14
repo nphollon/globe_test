@@ -7,6 +7,7 @@ describe("Cartographer", function () {
     var createRenderer, point2d, projection
 
     var Renderer = cartographer.Renderer
+    var Point2d = cartographer.Point2d
 
     point2d = cartographer.point2d
     projection = cartographer.projection
@@ -17,20 +18,20 @@ describe("Cartographer", function () {
         beforeEach(function () {
             context = jasmine.createSpyObj('context', ['fillRect'])
             renderer = new Renderer(context)
-            pt = point2d(3, 5)
+            pt = new Point2d(3, 5)
         })
 
         describe("drawMarker()", function () {
             it("should draw a rectangle at coordinates", function () {
                 renderer.drawMarker(pt)
-                expect(context.fillRect).toHaveBeenCalledWith(pt.x() - 5, pt.y() - 5, 10, 10)
+                expect(context.fillRect).toHaveBeenCalledWith(pt.x-5, pt.y-5, 10, 10)
             })
         })
 
         describe("drawMarkers()", function () {
             it("should draw a marker at each of a list of points", function () {
                 renderer.drawMarkers([pt])
-                expect(context.fillRect).toHaveBeenCalledWith(pt.x() - 5, pt.y() - 5, 10, 10)
+                expect(context.fillRect).toHaveBeenCalledWith(pt.x-5, pt.y-5, 10, 10)
             })
         })
     })
@@ -39,15 +40,15 @@ describe("Cartographer", function () {
         var testPoint
         
         beforeEach(function () {
-            testPoint = point2d(1, 2)
+            testPoint = new Point2d(1, 2)
         })
 
         describe("plus()", function () {
             it("should return point2d with sum of coordinates", function () {
                 var displacement, newPoint
-                displacement = point2d(4, 7)
+                displacement = new Point2d(4, 7)
                 newPoint = testPoint.plus(displacement)
-                expect(newPoint).toEqualObject(point2d(5, 9))
+                expect(newPoint).toEqualObject(new Point2d(5, 9))
             })
         })
 
@@ -59,12 +60,12 @@ describe("Cartographer", function () {
         
         describe("equals()", function () {
             it("should be true if x and y are equal", function () {
-                expect(testPoint).toEqualObject(point2d(1, 2))
+                expect(testPoint).toEqualObject(new Point2d(1, 2))
             })
 
             it("should be false if x or y is not equal", function () {
-                expect(testPoint).not.toEqualObject(point2d(0, 2))
-                expect(testPoint).not.toEqualObject(point2d(1, 0))
+                expect(testPoint).not.toEqualObject(new Point2d(0, 2))
+                expect(testPoint).not.toEqualObject(new Point2d(1, 0))
             })
 
             it("should be false if operand is not a point", function () {
@@ -81,8 +82,8 @@ describe("Cartographer", function () {
 
         verifyProjection = function (mapXY, canvasXY) {
             var canvasCoords = plateCaree(new maps.Coordinates(mapXY[0], mapXY[1]))
-            expect(canvasCoords.x()).toEqual(canvasXY[0])
-            expect(canvasCoords.y()).toEqual(canvasXY[1])
+            expect(canvasCoords.x).toEqual(canvasXY[0])
+            expect(canvasCoords.y).toEqual(canvasXY[1])
         }
 
         describe("1px per degree", function () {
