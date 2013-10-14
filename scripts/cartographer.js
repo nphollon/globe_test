@@ -1,6 +1,5 @@
 "use strict";
 
-var healpix = require("./healpix.js")
 var objects = require("./objects.js")
 
 var Renderer = function (context) {
@@ -57,14 +56,6 @@ exports.projection = function (canvasWidth, canvasHeight) {
 
         return canvasCenter.plus(displacement)
     }
-}
-
-exports.draw = function (canvas) {
-    var renderer = new Renderer(canvas.getContext("2d"))
-    var proj = exports.projection(canvas.width, canvas.height)
-    var coords = healpix.basePixelVertices()
-    var points = coords.map(proj)
-    renderer.drawMarkers(points)
 }
 
 exports.Renderer = Renderer
