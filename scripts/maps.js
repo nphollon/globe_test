@@ -2,11 +2,19 @@
 
 var objects = require("./objects.js")
 
+var normalize = function (degrees) {
+    var fullCircle = 360
+    var normalDegrees = degrees
+    while (normalDegrees > 0.5*fullCircle) { normalDegrees -= fullCircle; }
+    while (normalDegrees <= -0.5*fullCircle) { normalDegrees += fullCircle; }
+    return normalDegrees
+}
+
 var Angle = function (degrees) {
     if (!(this instanceof Angle)) {
         return new Angle(degrees)
     }
-    var seconds = degrees * Angle.secondsPerDegree
+    var seconds = Math.round(normalize(degrees) * Angle.secondsPerDegree)
     objects.defineConstant(this, "seconds", seconds)
 }
 
